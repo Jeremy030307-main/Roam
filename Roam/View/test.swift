@@ -8,8 +8,21 @@
 import SwiftUI
 
 struct test: View {
+    
+    @ObservedObject var yelpFetcher = YelpFetcher()
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        TextField("type something", text: $yelpFetcher.searchText)
+            .onSubmit {
+                Task{
+                    await yelpFetcher.fetchAllLocation()
+                }
+            }
+        List{
+            ForEach(yelpFetcher.locations, id: \.self) { location in
+                Text(location.name ?? "")
+            }
+        }
     }
 }
 

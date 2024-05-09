@@ -6,3 +6,16 @@
 //
 
 import Foundation
+
+class UserManager: ObservableObject {
+    
+    @Published var user: User
+    
+    init(user: User) {
+        self.user = user
+    }
+    
+    func deleteTrip(offset: IndexSet){
+        self.user.itinerary.remove(atOffsets: offset)
+    }
+}

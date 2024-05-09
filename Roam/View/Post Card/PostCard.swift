@@ -7,41 +7,58 @@
 
 import SwiftUI
 
-struct PostView: View {
-    
-    @ObservedObject var postManager: PostManager
-    @State var showDetail = false
-    
-    init(post: any Postable) {
-        self.postManager = PostManager(post: post)
+struct PostProfileView: View {
+        
+    var user: User
+
+    var body: some View {
+        
+        HStack {
+            Image(user.image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .clipShape(Circle())
+                .frame(width: 25)
+            Text(user.username)
+                .font(.subheadline)
+            Spacer()
+        }
+    }
+}
+
+struct PostVoteView: View {
+     
+    @ObservedObject var voteManager: VoteManager
+
+    init(voteItem: any Votable) {
+        self.voteManager = VoteManager(voteItem: voteItem)
     }
     
     var body: some View {
-    
-        BlankCard(cardColor: Color(.secondarySystemFill)){
-            
-            if postManager.textPost != nil {
-                TextPostView(postManager: postManager)
-            }
-            else if postManager.itineraryPost != nil {
-                ItineraryPostView(postManager: postManager)
-            }
-        }
-        .onTapGesture {
-            showDetail.toggle()
-        }
         
-        .sheet(isPresented: $showDetail) {
-            if postManager.textPost != nil {
-                PostDetailView(postManager: postManager){
-                    TextPostView(postManager: postManager)
-                }
+        HStack {
+            Button(action: self.voteManager.upvote) {
+                Image(systemName: voteManager.isUpvote() ? "arrowshape.up.fill":"arrowshape.up")
+                    .foregroundStyle(.black)
             }
-            else if postManager.itineraryPost != nil {
-                PostDetailView(postManager: postManager){
-                    ItineraryPostView(postManager: postManager)
-                }
+            Text("\(voteManager.voteCount())")
+            Button(action: self.voteManager.downvote) {
+                Image(systemName: voteManager.isDownvote() ? "arrowshape.down.fill":"arrowshape.down")
+                    .foregroundStyle(.black)
             }
+        }
+    }
+}
+
+struct PostCommentView: View {
+        
+    @ObservedObject var postManager: PostManager
+
+    var body: some View {
+        
+        HStack{
+            Image(systemName: "message")
+            Text("\(postManager.post.comment_count)")
         }
     }
 }
@@ -126,7 +143,45 @@ struct ItineraryPostView: View {
     }
 }
 
+struct PostCard: View {
+    
+    @ObservedObject var postManager: PostManager
+    @State var showDetail = false
+    
+    init(post: any Postable) {
+        self.postManager = PostManager(post: post)
+    }
+    
+    var body: some View {
+    
+        BlankCard(cardColor: Color(.secondarySystemFill)){
+            
+            if postManager.textPost != nil {
+                TextPostView(postManager: postManager)
+            }
+            else if postManager.itineraryPost != nil {
+                ItineraryPostView(postManager: postManager)
+            }
+        }
+        .onTapGesture {
+            showDetail.toggle()
+        }
+        
+        .sheet(isPresented: $showDetail) {
+            if postManager.textPost != nil {
+                PostDetailView(postManager: postManager){
+                    TextPostView(postManager: postManager)
+                }
+            }
+            else if postManager.itineraryPost != nil {
+                PostDetailView(postManager: postManager){
+                    ItineraryPostView(postManager: postManager)
+                }
+            }
+        }
+    }
+}
 
 #Preview {
-    PostView(post: guide1)
+    PostCard(post: guide1)
 }

@@ -8,11 +8,37 @@
 import SwiftUI
 
 struct SearchingView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
+    
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var yelpFetcher = YelpFetcher()
+    @Binding var searching: CGFloat
 
-#Preview {
-    SearchingView()
+    var searchBarAnimation: Namespace.ID
+    
+    var body: some View {
+        HStack{
+            SearchBar(searchText: $yelpFetcher.searchText)
+                .matchedGeometryEffect(id: "selectedID", in: searchBarAnimation)
+                .onSubmit {
+                    Task{
+                        await yelpFetcher.fetchAllLocation()
+                    }
+                }
+            
+            Button("Cancel"){
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    self.searching = 0
+                }
+            }
+            .matchedGeometryEffect(id: "cancelButton", in: searchBarAnimation)
+        }
+        
+        List{
+            ForEach(yelpFetcher.locations, id: \.self) { location in
+                SearchResultCard(locationData: location)
+            }
+            .listRowSeparator(.hidden)
+        }
+        .listStyle(.plain)
+    }
 }

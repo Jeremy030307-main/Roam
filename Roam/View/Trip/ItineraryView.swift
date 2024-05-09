@@ -8,11 +8,53 @@
 import SwiftUI
 
 struct ItineraryView: View {
+    
+    @ObservedObject var tripManager: TripManager
+    @State var addEvent = false
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        NavigationStack{
+            ZStack(alignment: .bottom){
+                VStack{
+                    ItineraryTopNavBar(totalDays: tripManager.trip.totalDays,
+                                       startDate: tripManager.trip.startDate, endDate: tripManager.trip.endDate, daySelected: $tripManager.selectedDay)
+                    .padding(.top, 10)
+                    
+                    ItineraryDayView(tripManager: tripManager, day: tripManager.selectedDay)
+                    Spacer()
+                }
+                
+                HStack{
+                    Spacer()
+                    Button{
+                        addEvent.toggle()
+                    }label: {
+                        Image(systemName: "plus.circle.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(height: 50)
+                    }
+                    .padding(35)
+                }
+            }
+            .frame(maxHeight: .infinity)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack {
+                        Text("Itinerary").font(.headline)
+                        Text(tripManager.trip.title).font(.subheadline)
+                    }
+                }
+            }
+            .background(Color(.secondarySystemBackground))
+        }
+        .sheet(isPresented: $addEvent) {
+            AddEventView(tripManager: tripManager, addingEvent: $addEvent)
+        }
     }
 }
 
 #Preview {
-    ItineraryView()
+    ItineraryView(tripManager: TripManager(trip: itinerary2))
 }

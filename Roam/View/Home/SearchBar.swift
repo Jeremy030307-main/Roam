@@ -8,11 +8,24 @@
 import SwiftUI
 
 struct SearchBar: View {
+    
+    @Binding var searchText: String
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        HStack{
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.accent)
+            TextField("Place, Country, User", text: $searchText)
+        }
+        .font(.headline)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 15.0)
+                .foregroundStyle(Color(.secondarySystemBackground))
+        )
     }
 }
 
 #Preview {
-    SearchBar()
+    SearchBar(searchText: .constant(""))
 }

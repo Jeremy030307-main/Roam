@@ -66,7 +66,6 @@ struct ProfileCard: View {
         }
     }
 }
-
 #Preview {
     ProfileCard(user: user10)
 }

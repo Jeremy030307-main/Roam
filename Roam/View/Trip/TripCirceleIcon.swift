@@ -12,6 +12,8 @@ struct TripCirceleIcon: View {
     var image: Image
     var color: Color
     @State private var height: CGFloat?
+    @State private var imageHeight: CGFloat?
+    @State private var imageWidth: CGFloat?
     
     var body: some View {
         
@@ -33,8 +35,25 @@ struct TripCirceleIcon: View {
             image
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(height: (height ?? 10) / 2)
+                .frame(
+                    width:imageWidth ?? 10>imageHeight ?? 10 ? (height ?? 10)/1.5:imageWidth,
+                    height: imageHeight ?? 10>imageWidth ?? 10 ? (height ?? 10)/1.5:imageWidth)
                 .foregroundColor(.white)
+                .background(
+                    GeometryReader { geometry in
+                        Path { path in
+                            let height = geometry.size.height
+                            let width = geometry.size.width
+                            DispatchQueue.main.async {
+                                if self.imageHeight != height {
+                                    self.imageHeight = height
+                                }
+                                if self.imageWidth != width {
+                                    self.imageWidth = width
+                                }
+                            }
+                        }
+                    })
                 
         }
     }

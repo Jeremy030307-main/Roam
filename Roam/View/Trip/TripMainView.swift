@@ -9,8 +9,13 @@ import SwiftUI
 
 struct TripMainView: View {
     
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject var tripManager: TripManager
-    @State var listHeight: CGFloat?
+    @State var addList = false
+    
+    let columns = [
+        GridItem(.adaptive(minimum: 150)),
+        GridItem(.adaptive(minimum: 150))]
     
     init(trip: Trip) {
         self.tripManager = TripManager(trip: trip)
@@ -19,53 +24,77 @@ struct TripMainView: View {
     var body: some View {
         
         NavigationStack{
+
             VStack(alignment: .leading){
                 
-                VStack(alignment: .leading) {
-                    BlankCard(cardColor: Color(.white)) {
-                        
-                        HStack(alignment: .top){
-                            
-                            VStack(alignment: .leading) {
-                                TripCirceleIcon(image: Image(systemName: "calendar"), color: Color.orange)
-                                    .frame(width: 30)
-                                
-                                Text("Itinerary").font(.title2).bold()
-                                    .foregroundStyle(.secondary)
-                                    .padding(.top, 10)
-                            }
-                            Spacer()
-                            
-                            if tripManager.trip.startDate == nil {
-                                Text("\(tripManager.trip.totalDays)d").font(.callout)
-                                    .padding()
-                            }
-                            else{
-                                Text(tripManager.trip.startDate!.formatted(.dateTime.day().month()) + " - " + tripManager.trip.endDate!.formatted(.dateTime.day().month())).font(.title2).bold()
-                                    .padding()
-                            }
+                HStack{
+                    Button{
+                        dismiss()
+                    }label: {
+                        HStack{
+                            Image(systemName: "chevron.backward")
                         }
-                        .frame(maxWidth: .infinity)
-                    }
-                    
-                    HStack{
+                    }.foregroundStyle(.accent)
+                        .padding(.bottom, 10)
+                    Spacer()
+                }
+                
+                Text(tripManager.trip.title).font(.title).padding(.horizontal).bold()
+                
+                VStack(alignment: .leading) {
+                    NavigationLink{
+                        ItineraryView(tripManager: tripManager)
+                    } label: {
                         BlankCard(cardColor: Color(.white)) {
                             
                             HStack(alignment: .top){
                                 
                                 VStack(alignment: .leading) {
-                                    TripCirceleIcon(image: Image(systemName: "dollarsign"), color: Color.green)
+                                    TripCirceleIcon(image: Image(systemName: "calendar"), color: Color.orange)
                                         .frame(width: 30)
                                     
-                                    Text("Expnese").font(.title2).bold()
+                                    Text("Itinerary").font(.title2).bold()
                                         .foregroundStyle(.secondary)
-                                        .padding(.top, 10)
                                 }
                                 Spacer()
+                                
+                                if tripManager.trip.startDate == nil {
+                                    Text("\(tripManager.trip.totalDays)d")
+                                        .font(.title2).bold()
+                                        .padding()
+                                }
+                                else{
+                                    Text(tripManager.trip.startDate!.formatted(.dateTime.day().month()) + " - " + tripManager.trip.endDate!.formatted(.dateTime.day().month())).font(.title2).bold()
+                                        .padding()
+                                }
                             }
                             .frame(maxWidth: .infinity)
                         }
-                        .padding(5)
+                    }
+                    .foregroundStyle(.primary)
+                    
+                    LazyVGrid(columns: columns){
+                        NavigationLink{
+                            ExpenseView(tripManager: tripManager)
+                        } label: {
+                            
+                            BlankCard(cardColor: Color(.white)) {
+                                
+                                HStack(alignment: .top){
+                                    
+                                    VStack(alignment: .leading) {
+                                        TripCirceleIcon(image: Image(systemName: "dollarsign"), color: Color.green)
+                                            .frame(width: 30)
+                                        
+                                        Text("Expnese").font(.title2).bold()
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .frame(maxWidth: .infinity)
+                            }
+                            .padding(5)
+                        }.foregroundStyle(.primary)
                         
                         BlankCard(cardColor: Color(.white)) {
                             
@@ -77,7 +106,6 @@ struct TripMainView: View {
                                     
                                     Text("Checklist").font(.title2).bold()
                                         .foregroundStyle(.secondary)
-                                        .padding(.top, 10)
                                 }
                                 Spacer()
                             }
@@ -87,10 +115,23 @@ struct TripMainView: View {
                     }
                     .padding(.vertical, 5)
                 }
-                .padding(.horizontal)
                 
-                List{
-                    Section{
+                HStack{
+                    Text("Saved Places").font(.title3).bold()
+                    
+                    Spacer()
+                    Button{
+                        addList.toggle()
+                    } label: {
+                        Text("Add New List").font(.subheadline).bold()
+                            .foregroundStyle(.accent)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top)
+
+                BlankCard(cardColor: .white) {
+                    List{
                         ForEach(tripManager.trip.savedPlaces, id: \.self){ savedPlace in
                             NavigationLink {
                                 Text(savedPlace.title)
@@ -104,30 +145,26 @@ struct TripMainView: View {
                             }
                         }
                         .onDelete(perform: tripManager.deleteList)
-                    } header: {
-                        HStack {
-                            Text("Saved Places")
-                                .font(.headline).bold().foregroundStyle(.black)
-                            Spacer()
-                            Button(action: tripManager.addNewList) {
-                                Text("Add New List").font(.footnote).bold()
-                                    .foregroundStyle(.roam)
-                            }
-                        }
+                        .onMove(perform: tripManager.moveList)
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+
                 }
-                .listStyle(.insetGrouped)
-                .cornerRadius(20)
-                .scrollContentBackground(.hidden)
-                
+ 
                 Spacer()
+                    
             }
+            .padding()
             .background(Color(.secondarySystemFill))
-            .navigationTitle(tripManager.trip.title)
+            .toolbar(.hidden)
+            .sheet(isPresented: $addList) {
+                AddNewListView(tripManager: tripManager)
+            }
         }
     }
 }
 
 #Preview {
-    TripMainView(trip: itinerary1)
+    TripMainView(trip: itinerary6)
 }

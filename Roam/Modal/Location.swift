@@ -17,3 +17,4 @@ struct Location: Hashable , Identifiable{
     var phone: String
     var operatingHour: String
     var image: String?
+}

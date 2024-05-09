@@ -9,4 +9,9 @@ import UIKit
 
 class SavedPlacesManager: ObservableObject {
 
+    @Published var savedPlace: SavedPlace
+    
+    init(savedPlace: SavedPlace) {
+        self.savedPlace = savedPlace
+    }
 }

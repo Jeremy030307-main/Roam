@@ -83,7 +83,7 @@ struct TopImagaeCard<Content: View>: View {
             image
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(height: height)
+                .frame(height: height > 200 ? 200: height/2)
                 .frame(maxWidth: .infinity)
                 .clipped()
             content

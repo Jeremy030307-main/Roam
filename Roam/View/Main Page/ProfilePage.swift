@@ -13,33 +13,35 @@ struct ProfilePage: View {
     @State var tabSelection: ProfileTabItem = .post
     
     var body: some View {
-        HStack{
-            Text("Profile").font(.title).bold()
-            Spacer()
-        }
-        .padding(.horizontal)
-        
-        VStack {
-            ProfileCard(user: user)
+        VStack{
+            HStack{
+                Text("Profile").font(.title).bold()
+                Spacer()
+            }
+            .padding(.horizontal)
             
-            ProfilePageTopNavBar(tabSelection: $tabSelection)
-            
-            ScrollView{
-                switch tabSelection {
-                case .post:
-                    ForEach(user.posts){ post in
-                        PostView(post: post)
-                    }
-                case .guide:
-                    ForEach(user.guides) { guide in
-                        PostView(post: guide)
+            VStack {
+                ProfileCard(user: user)
+                
+                ProfilePageTopNavBar(tabSelection: $tabSelection)
+                
+                ScrollView{
+                    switch tabSelection {
+                    case .post:
+                        ForEach(user.posts){ post in
+                            PostCard(post: post)
+                        }
+                    case .guide:
+                        ForEach(user.guides) { guide in
+                            PostCard(post: guide)
+                        }
                     }
                 }
+                
+                Spacer()
             }
-            
-            Spacer()
+            .padding()
         }
-        .padding()
     }
 }
 
