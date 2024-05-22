@@ -33,6 +33,11 @@ enum Weekday: Int, CaseIterable, Identifiable{
 
 struct VolumeData: Codable {
     var businesses: [LocationData]?
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.businesses = try container.decodeIfPresent([LocationData].self, forKey: .businesses)
+    }
 }
 
 struct LocationData: Codable, Hashable {
@@ -120,36 +125,33 @@ struct LocationData: Codable, Hashable {
                 categories?.append(category.title)
             }
         }
-        
-        
-        
     }
     
+    init(id: String?,name: String?,rating: Double?,price: String?,phone: String?,categories: [String]?,reviewCount: Int?,imageURL: String?,latitude: Double?,longitude: Double?,address: String?){
+        self.id = id
+        self.name = name
+        self.rating = rating
+        self.price = price
+        self.phone = phone
+        self.categories = categories
+        self.reviewCount = reviewCount
+        self.imageURL = imageURL
+        self.latitude = latitude
+        self.longitude = longitude
+        self.address = address
+    }
 }
 
 struct LocationDetail: Codable, Hashable {
     
     var photos: [String]?
-    var hours: String?
+    var open: [String: [String]]?
     var address: String?
 
     private enum RootKeys: String, CodingKey {
         case hours
         case photos
         case location
-    }
-    
-    private struct Hours: Decodable {
-        var hours_type: String
-        var open: [Openingtime]
-        var is_open_now: Bool
-    }
-    
-    private struct Openingtime: Decodable {
-        var is_overnight: Bool
-        var end: Int
-        var day: Int
-        var start: Int
     }
     
     private enum LocationKeys: String, CodingKey {
@@ -162,29 +164,59 @@ struct LocationDetail: Codable, Hashable {
         case zip = "zip_code"
     }
     
+    private struct Hours: Codable, Hashable{
+        
+        var hours_type: String?
+        var open: [String: [String]]?
+        
+        private enum RootKeys: String, CodingKey{
+            case hours_type
+            case open
+            case is_open_now
+        }
+        
+        private struct Openingtime: Decodable {
+            var is_overnight: Bool
+            var end: String
+            var day: Int
+            var start: String
+        }
+        
+        init(from decoder: Decoder) throws {
+            
+            // get the root key container
+            let rootContainer = try decoder.container(keyedBy: RootKeys.self)
+            self.hours_type = try? rootContainer.decode(String.self, forKey: .hours_type)
+            
+            if let openingHours = try? rootContainer.decodeIfPresent([Openingtime].self, forKey: .open){
+                self.open = [:]
+                for openTime in openingHours{
+                    print(openTime.start)
+                    print(openTime.end)
+                    self.open?[Weekday(rawValue: openTime.day)?.day ?? " "] = [openTime.start, openTime.end]
+                }
+            }
+        }
+    }
+    
     init(from decoder: Decoder) throws {
         
         // get the root container
         let rootContainer = try decoder.container(keyedBy: RootKeys.self)
-        
-        // get the hours container
-        let hourContainer = try rootContainer.nestedContainer(keyedBy: HoursKey.self, forKey: .hours)
-        
+                
         // get the locatoin container
         let locationContainer = try rootContainer.nestedContainer(keyedBy: LocationKeys.self, forKey: .location)
         
         // get the location details
         photos = try? rootContainer.decode([String].self, forKey: .photos)
         
-        hours = try? hourContainer.decode(String.self, forKey: .hours_type)
-//         get the opening hours
-//        if let opening = try? hourContainer.decodeIfPresent([Openingtime].self, forKey: .open){
-//            
-//            for time in opening{
-//                hours?.append(time.day)
-//            }
-//        }
-        
+        if let hours = try? rootContainer.decode([Hours].self, forKey: .hours){
+            for hour in hours{
+                if hour.hours_type == "REGULAR"{
+                    self.open = hour.open
+                }
+            }
+        }
         // get the address
         let address1 = try? locationContainer.decode(String.self, forKey: .address1)
         let zip = try? locationContainer.decode(String.self, forKey: .zip)
@@ -192,8 +224,56 @@ struct LocationDetail: Codable, Hashable {
         let country = try? locationContainer.decode(String.self, forKey: .country)
         
         address = "\(address1 ?? ""), \(zip ?? ""), \(city ?? ""), \(country ?? "")"
-        
     }
     
+    init(photos: [String]?, open: [String: [String]]?, address: String?){
+        self.photos = photos
+        self.open = open
+        self.address = address
+    }
+}
+
+struct VolumeReviews: Codable, Hashable{
     
+    var reviews: [LocationReview]?
+    
+}
+
+struct LocationReview: Codable, Hashable {
+    
+    var text: String?
+    var userName: String?
+    var userImage: String?
+    var rating: Double?
+    var reviewLink: String?
+    
+    private enum ReviewKeys: String, CodingKey {
+        case text
+        case user
+        case rating
+        case url
+    }
+    
+    private enum UserKeys: String, CodingKey {
+        case image_url
+        case name
+    }
+    
+    init(from decoder: Decoder) throws {
+        let reviewContainer = try decoder.container(keyedBy: ReviewKeys.self)
+        let userContainer = try reviewContainer.nestedContainer(keyedBy: UserKeys.self   , forKey: .user)
+        
+        text = try? reviewContainer.decode(String.self, forKey: .text)
+        rating = try? reviewContainer.decode(Double.self, forKey: .rating)
+        reviewLink = try? reviewContainer.decode(String.self, forKey: .url)
+        userName = try? userContainer.decode(String.self, forKey: .name)
+        userImage = try? userContainer.decode(String.self, forKey: .image_url)
+    }
+    
+    init(text: String?, userName: String?, userImage: String?, rating: Double?, reviewLink: String?){
+        self.text = text
+        self.userName = userName
+        self.userImage = userImage
+        self.reviewLink = reviewLink
+    }
 }

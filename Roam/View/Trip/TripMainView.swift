@@ -27,7 +27,7 @@ struct TripMainView: View {
 
             VStack(alignment: .leading){
                 
-                HStack{
+                HStack(alignment: .top){
                     Button{
                         dismiss()
                     }label: {
@@ -36,10 +36,15 @@ struct TripMainView: View {
                         }
                     }.foregroundStyle(.accent)
                         .padding(.bottom, 10)
+                    
+                    VStack(alignment: .leading){
+                        Text(tripManager.trip.title).font(.title).padding(.horizontal).bold()
+                        Text(tripManager.trip.destination).font(.title3).padding(.horizontal).bold().foregroundStyle(.secondary)
+                    }
+
                     Spacer()
                 }
                 
-                Text(tripManager.trip.title).font(.title).padding(.horizontal).bold()
                 
                 VStack(alignment: .leading) {
                     NavigationLink{
@@ -50,7 +55,7 @@ struct TripMainView: View {
                             HStack(alignment: .top){
                                 
                                 VStack(alignment: .leading) {
-                                    TripCirceleIcon(image: Image(systemName: "calendar"), color: Color.orange)
+                                    TripCirceleIcon(image: Image(systemName: "calendar.circle.fill"), color: Color.orange, dimension: 30)
                                         .frame(width: 30)
                                     
                                     Text("Itinerary").font(.title2).bold()
@@ -83,7 +88,7 @@ struct TripMainView: View {
                                 HStack(alignment: .top){
                                     
                                     VStack(alignment: .leading) {
-                                        TripCirceleIcon(image: Image(systemName: "dollarsign"), color: Color.green)
+                                        TripCirceleIcon(image: Image(systemName: "dollarsign.circle.fill"), color: Color.green, dimension: 30)
                                             .frame(width: 30)
                                         
                                         Text("Expnese").font(.title2).bold()
@@ -96,22 +101,27 @@ struct TripMainView: View {
                             .padding(5)
                         }.foregroundStyle(.primary)
                         
-                        BlankCard(cardColor: Color(.white)) {
-                            
-                            HStack(alignment: .top){
+                        NavigationLink{
+                            ChecklistView(tripManager: tripManager)
+                        } label: {
+                            BlankCard(cardColor: Color(.white)) {
                                 
-                                VStack(alignment: .leading) {
-                                    TripCirceleIcon(image: Image(systemName: "checklist"), color: Color.blue)
-                                        .frame(width: 30)
+                                HStack(alignment: .top){
                                     
-                                    Text("Checklist").font(.title2).bold()
-                                        .foregroundStyle(.secondary)
+                                    VStack(alignment: .leading) {
+                                        TripCirceleIcon(image: Image(systemName: "checkmark.circle.fill"), color: Color.blue, dimension: 30)
+                                            .frame(width: 30)
+                                        
+                                        Text("Checklist").font(.title2).bold()
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
                                 }
-                                Spacer()
+                                .frame(maxWidth: .infinity)
                             }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .padding(5)
+                            .padding(5)
+                        }.foregroundStyle(.primary)
+                        
                     }
                     .padding(.vertical, 5)
                 }
@@ -137,7 +147,7 @@ struct TripMainView: View {
                                 Text(savedPlace.title)
                             } label: {
                                 HStack{
-                                    TripCirceleIcon(image: Image(systemName: savedPlace.icon), color: SavedPlaceColor(rawValue: savedPlace.color)?.copy ?? .red)
+                                    TripCirceleIcon(image: Image(systemName: savedPlace.icon), color: SavedPlaceColor(rawValue: savedPlace.color)?.copy ?? .red, dimension: 30)
                                         .frame(width: 30)
                                     
                                     Text(savedPlace.title).font(.subheadline).padding(.horizontal)
@@ -145,7 +155,6 @@ struct TripMainView: View {
                             }
                         }
                         .onDelete(perform: tripManager.deleteList)
-                        .onMove(perform: tripManager.moveList)
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
@@ -156,7 +165,7 @@ struct TripMainView: View {
                     
             }
             .padding()
-            .background(Color(.secondarySystemFill))
+            .background(Color(.secondarySystemBackground))
             .toolbar(.hidden)
             .sheet(isPresented: $addList) {
                 AddNewListView(tripManager: tripManager)

@@ -12,32 +12,40 @@ struct EventCardView: View {
     @ObservedObject var eventManager: EventManager
     @State var showDetail = false
     
-    init(event: Event) {
+    var day: Int
+    
+    init(event: Event, day: Int) {
         self.eventManager = EventManager(event: event)
+        self.day = day
     }
     var body: some View {
         HStack(alignment: .top){
             HStack(spacing: 10){
                 Text(eventManager.getStartTimeText()).font(.custom("itinerarySmalltime", fixedSize: 15))
                     .opacity(0.5)
-                TripCirceleIcon(image: eventManager.getIcon(), color: .accentColor)
+                TripCirceleIcon(image: eventManager.getIcon(), color: .accentColor, dimension: 30)
                     .frame(width: 30)
             }
-            
             Button{
                 showDetail.toggle()
             } label: {
                 switch EventType(rawValue: eventManager.event.type){
-                case .accomodation, .activity, .restaurant :
-                    PlaceEventCard(eventManager: eventManager)
+                case .activity, .restaurant :
+                    PlaceEventCard(eventManager: eventManager, day: day)
                         .frame(maxWidth: .infinity)
                 case .flight, .tour, .transportation:
-                    TransportationEventCard(eventManager: eventManager)
+                    TransportationEventCard(eventManager: eventManager, day: day)
                         .frame(maxWidth: .infinity)
+                case .accomodation:
+                    PeriodicEventCard(eventManager: eventManager, day: day, startText: "Check In", endText: "Check Out")
+                case .carRental:
+                    PeriodicEventCard(eventManager: eventManager, day: day, startText: "Pick Up", endText: "Drop Off")
+
                 case .none:
-                    Text("")
+                    Text("fff")
                 }
             }.foregroundStyle(.primary)
+                .shadow(radius: 2)
             
         }
         .sheet(isPresented: $showDetail){
@@ -47,28 +55,16 @@ struct EventCardView: View {
     }
 }
 
-struct HorizontalLine: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: 0, y: 0))
-        path.addLine(to: CGPoint(x: rect.width, y: 0))
-        return path
-    }
-}
-
 struct TransportationEventCard: View {
     
     @ObservedObject var eventManager: EventManager
+    var day: Int
 
     let columns = [
         GridItem(.flexible()),
             GridItem(.fixed(100)),
             GridItem(.flexible())
         ]
-    
-    init(eventManager: EventManager) {
-        self.eventManager = eventManager
-    }
     
     var body: some View{
         BlankCard(cardColor: .white) {
@@ -102,7 +98,7 @@ struct TransportationEventCard: View {
                     Text(eventManager.event.destination?.name ?? "").font(.system(size: 10)).opacity(0.5).padding(.top, 0.2)
                 }
             })
-            .frame(height: eventManager.getEventHeight())
+            .frame(height: eventManager.getEventHeight(atDay: day))
         }
     }
 }
@@ -110,15 +106,25 @@ struct TransportationEventCard: View {
 struct PlaceEventCard: View {
     
     @ObservedObject var eventManager: EventManager
+    var day: Int
+
     
     var body: some View{
-        if eventManager.getEventHeight() <= 50 {
-            BlankCard(cardColor: Color.primary) {
-                Text("gsdffdg")
+        if eventManager.getEventHeight(atDay: day) <= 50 {
+            BlankCard(cardColor: Color(.systemBackground)) {
+                VStack(alignment: .leading){
+                    Text(eventManager.event.location.name).font(.headline)
+                    
+                    HStack{
+                        Text(eventManager.getEventDurationText()).font(.subheadline).opacity(0.5)
+                        Spacer()
+                        Text("\(eventManager.getEndTimeText())").font(.subheadline).opacity(0.5)
+                    }
+                }
             }
         }
-        else if eventManager.getEventHeight() > 180{
-            TopImagaeCard(image: Image(eventManager.event.location.image ?? ""), backgroundColor: Color(.secondarySystemFill)) {
+        else if eventManager.getEventHeight(atDay: day) > 180{
+            TopImagaeCard(image: Image(eventManager.event.location.image ?? ""), backgroundColor: Color(.systemBackground)) {
                 VStack(alignment: .leading){
                     Text(eventManager.event.location.name).font(.headline)
                         .multilineTextAlignment(.leading)
@@ -126,16 +132,19 @@ struct PlaceEventCard: View {
                     Text(eventManager.event.location.address).lineLimit(1).font(.subheadline).opacity(0.5)
                     
                     Spacer()
-                    
-                    Text(eventManager.getEventDurationText()).font(.subheadline).opacity(0.5)
+                    HStack{
+                        Text(eventManager.getEventDurationText()).font(.subheadline).opacity(0.5)
+                        Spacer()
+                        Text("\(eventManager.getEndTimeText())").font(.subheadline).opacity(0.5)
+                    }
                 }
-                .frame(height: eventManager.getEventHeight()/2)
+                .frame(height: eventManager.getEventHeight(atDay: day)/2)
                 .frame(maxWidth: .infinity)
                 .padding(.trailing, 10)
                 .padding(.vertical, 5)
             }
         }else {
-            SideImageCard(image: Image(eventManager.event.location.image ?? ""), backgroundColor: Color(.secondarySystemFill)) {
+            SideImageCard(image: Image(eventManager.event.location.image ?? ""), backgroundColor: Color(.systemBackground)) {
                 VStack(alignment: .leading){
                     Text(eventManager.event.location.name).font(.headline)
                         .multilineTextAlignment(.leading)
@@ -144,9 +153,13 @@ struct PlaceEventCard: View {
                     
                     Spacer()
                     
-                    Text(eventManager.getEventDurationText()).font(.subheadline).opacity(0.5)
+                    HStack{
+                        Text(eventManager.getEventDurationText()).font(.subheadline).opacity(0.5)
+                        Spacer()
+                        Text("\(eventManager.getEndTimeText())").font(.subheadline).opacity(0.5)
+                    }
                 }
-                .frame(height: eventManager.getEventHeight())
+                .frame(height: eventManager.getEventHeight(atDay: day))
                 .frame(maxWidth: .infinity)
                 .padding(.trailing, 10)
                 .padding(.vertical, 5)
@@ -155,7 +168,36 @@ struct PlaceEventCard: View {
     }
 }
 
-#Preview {
-    EventCardView(event: event2)
-        .previewLayout(.sizeThatFits)
+struct PeriodicEventCard: View {
+    
+    @ObservedObject var eventManager: EventManager
+    var day: Int
+    var startText: String
+    var endText: String
+
+    var body: some View{
+        HStack{
+            VStack(alignment: .leading){
+                Text((day == eventManager.event.startDay ? startText: endText) + " at " + eventManager.event.location.name).lineLimit(1).font(.headline)
+            }
+
+            Spacer()
+            
+            Image(systemName: "chevron.forward").padding(.trailing, 10)
+        }
+        .frame(height: 30)
+        .background(.quinary).cornerRadius(5)
+    }
+}
+
+#Preview("Place Event") {
+    EventCardView(event: event3, day: 1)
+}
+
+#Preview("Transportation Event") {
+    EventCardView(event: event1, day: 1)
+}
+
+#Preview("Periodic Event"){
+    EventCardView(event: event2, day: 1)
 }

@@ -7,6 +7,9 @@
 
 import Foundation
 import SwiftUI
+enum EventPeriod {
+    case start, end
+}
 
 class EventManager: ObservableObject {
     
@@ -25,7 +28,7 @@ class EventManager: ObservableObject {
             return formatter
         }
         
-        return dateFormatter.string(from: event.startTime)
+        return dateFormatter.string(from: event.startTime )
     }
     
     func getEndTimeText() -> String {
@@ -37,23 +40,44 @@ class EventManager: ObservableObject {
             return formatter
         }
         
-        return dateFormatter.string(from: event.endTime)
+        return dateFormatter.string(from: event.endTime  )
     }
     
-    func getEventHeight() -> CGFloat {
+    func getEventHeight(atDay: Int) -> CGFloat {
         
-        let diffComponents = Calendar.current.dateComponents([.minute], from: event.startTime, to: event.endTime)
+        var minute: Int = 0
         
-        guard let minutes: Int = diffComponents.minute else {
-            return CGFloat(0)
+        if event.startDay == event.endDay {  // the event start and end at same day
+            let diffComponents = Calendar.current.dateComponents([.minute], from: event.startTime  , to: event.endTime)
+            minute = diffComponents.minute ?? 0
+
+        } else {  // the event start at one day and end at one day
+            
+            
+            if atDay == event.startDay{  // display block the part of event that appear at firsst dat
+                let dateComponents = Calendar.current.dateComponents([.hour, .minute], from: event.startTime)
+                if let dateHour = dateComponents.hour, let dateMinute = dateComponents.minute {
+                    minute = (24*60) - (dateHour*60) - dateMinute
+
+                }
+                
+            } else if atDay == event.endDay {
+                let dateComponents = Calendar.current.dateComponents([.hour, .minute], from: event.endTime)
+                if let dateHour = dateComponents.hour, let dateMinute = dateComponents.minute {
+                    minute = (dateHour*60) + dateMinute
+                }
+                
+            } else {
+                minute = (24*60)
+            }
         }
         
-        return CGFloat(Double(minutes) * 1.5)
+        return CGFloat(Double(minute) * 1.5)
     }
     
     func getEventDurationText() -> String {
         
-        let diffComponents = Calendar.current.dateComponents([.hour, .minute], from: event.startTime, to: event.endTime)
+        let diffComponents = Calendar.current.dateComponents([.hour, .minute], from: event.startTime  , to: event.endTime  )
         
         guard let hours: Int = diffComponents.hour, let minutes: Int = diffComponents.minute else {
             return ""
@@ -76,10 +100,10 @@ class EventManager: ObservableObject {
         return Image(systemName: imageName)
     }
     
-    func getEventDate() -> String {
+    func getEventDate(period: EventPeriod) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "EEEE, MMM dd yyyy"
-        let weekDay = dateFormatter.string(from: event.startTime)
+        let weekDay = dateFormatter.string(from: period == .start ? event.startTime:event.endTime )
         return weekDay
     }
 

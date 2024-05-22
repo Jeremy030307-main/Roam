@@ -10,6 +10,8 @@ import CoreData
 
 struct ContentView: View {
 
+    @State var enterPerDayView = false
+    
     var body: some View {
         TabView{
             HomePage()
@@ -17,10 +19,12 @@ struct ContentView: View {
                     Label("Home", systemImage: "house.fill")
                 }
             
-            TripPage()
+            TripPage(enterPerDayView: $enterPerDayView)
                 .tabItem {
                     Label("Trip", systemImage: "airplane.departure")
                 }
+                .toolbarBackground(enterPerDayView==true ? .visible: .automatic, for: .tabBar)
+            
             
             NotificationPage()
                 .tabItem {

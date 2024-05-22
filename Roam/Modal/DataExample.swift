@@ -18,18 +18,22 @@ let user8 = User(name: "Jessical" , username: "lovetravel", email: "hahahaha@gma
 let user9 = User(name: "Ismael Harim", username: "ismael123", email: "ismaelharim@gmail.com", password: "12345678")
 
 // Location object example
-let location1 = Location(name: "Sydney", address: "blablabla", rating: 5, descrition: "airport", phone: "01234333242342", operatingHour: "1-234")
+let location1 = Location(name: "Sydney", address: "blablabla", rating: 5, phone: "01234333242342", operatingHour: "1-234", price: "$$")
 
 let location2 = Location(name: "Sydney Harbour Mariott Hotel at Circular Quay",
                          address: "16 Bulletin Pl, Sydney NSW 2000",
                          rating: 4.5,
-                         descrition: "Traditional Italian food served in a warm and intimate exposed brick dining space dating from 1861.",
                          phone: "(02) 9251 2929",
                          operatingHour: "Friday: 12–3 pm, 6–10 pm",
-                         image: "SydneyHotel")
+                         image: "SydneyHotel", price: "$$$")
 
-let start = Location(name: "Melbourne", address: "blablabla", rating: 5, descrition: "airport", phone: "34324342424", operatingHour: "1222")
+let location3 = Location(name: "Nepal Dining Room", address: "156 Waverley Rd, Malvern East VIC 3145", rating: 4.3, phone: "(03) 9569 3358", operatingHour: "", image: "https://s3-media0.fl.yelpcdn.com/bphoto/LbenF56zi-OnVTKhdyTQ0g/o.jpg", price: "$$")
 
+let start = Location(name: "Melbourne", address: "blablabla", rating: 5, phone: "34324342424", operatingHour: "1222", price: "$$")
+
+let expense1 = Expense(catogery: ExpenseCategory.food.rawValue, title: "Tiramisu", amount: 7.0, day: 1)
+
+let checklist1 = Checklist(title: "Puffer acket", completed: false)
 //Saved Places List example
 let list1 = SavedPlace(title: "Cafés", icon: "cup.and.saucer.fill", color: SavedPlaceColor.brown.rawValue)
 let list2 = SavedPlace(title: "Brunch Spot", icon: "fork.knife", color: SavedPlaceColor.orange.rawValue)
@@ -45,15 +49,31 @@ let formatter1: DateFormatter = {
 }()
 
 let event1 = Event(type: EventType.flight.rawValue,
-                   startTime: formatter1.date(from: "2024/03/07 15:30") ?? .now,
+                   startDay: 1,
+                   endDay: 1, startTime: formatter1.date(from: "2024/03/07 15:30") ?? .now,
                    endTime: formatter1.date(from: "2024/03/07 16:55") ?? .now,
                    location: start,
                    destination: location1)
 
 let event2 = Event(type: EventType.accomodation.rawValue,
-                   startTime: formatter1.date(from: "2024/03/07 17:30") ?? .now,
-                   endTime: formatter1.date(from: "2024/03/07 18:30") ?? .now,
+                   startDay: 1, 
+                   endDay: 3, startTime: formatter1.date(from: "2024/03/07 17:30") ?? .now,
+                   endTime: formatter1.date(from: "2024/03/09 11:30") ?? .now,
                    location: location2)
+
+let event3 = Event(type: EventType.restaurant.rawValue,
+                   startDay: 1,
+                   endDay: 1, startTime: formatter1.date(from: "2024/03/07 20:30") ?? .now,
+                   endTime: formatter1.date(from: "2024/03/07 21:30") ?? .now,
+                   location: location3)
+
+let event4 = Event(type: EventType.restaurant.rawValue,
+                   startDay: 1,
+                   endDay: 2,
+                   startTime: formatter1.date(from: "2024/03/07 23:30") ?? .now,
+                   endTime: formatter1.date(from: "2024/03/08 02:30") ?? .now,
+                   location: location3)
+
 
 // Trip object example
 let formatter: DateFormatter = {
@@ -79,7 +99,11 @@ let itinerary2 = Trip(image: "Sydney",
                            startDate: formatter.date(from: "2024/03/07") ?? .now,
                            endDate: formatter.date(from: "2024/03/15") ?? .now,
                            totalDays: 9,
-                      days: [1: [event1, event2]]
+                      events: [1: [event1, event2, event4],
+                             2: [event4],
+                             3: [event2]],
+                      expenses: [1: [expense1]],
+                      checklist: [checklist1]
                            )
 
 let itinerary3 = Trip(image: "Peninsula",

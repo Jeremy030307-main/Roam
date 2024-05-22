@@ -15,7 +15,7 @@ struct CommentCard: View {
     var body: some View {
         
         BlankCard(cardColor: Color(.white)) {
-            PostProfileView(user: comment.user)
+            ProfileHeader(image: Image(comment.user.image), username: comment.user.username)
                         
             Text(comment.content)
                 .font(.caption)

@@ -37,7 +37,7 @@ struct AddNewListView: View {
                 HStack{
                     Spacer()
                     TripCirceleIcon(image: Image(systemName: tripManager.newListIcon.rawValue),
-                                    color: tripManager.newListColor.copy)
+                                    color: tripManager.newListColor.copy, dimension: 100)
                     .frame(width: 100)
                     .padding()
                     Spacer()
@@ -92,7 +92,7 @@ struct AddNewListView: View {
                                         lineWidth: 3)
                                     .frame(width: 45)
 
-                                    TripCirceleIcon(image: Image(systemName: icon.rawValue), color: Color(.gray))
+                                    TripCirceleIcon(image: Image(systemName: icon.rawValue), color: Color(.gray), dimension: 35)
                                         .frame(width: 35)
                                 }
                             }

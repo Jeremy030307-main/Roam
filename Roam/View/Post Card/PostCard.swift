@@ -7,25 +7,6 @@
 
 import SwiftUI
 
-struct PostProfileView: View {
-        
-    var user: User
-
-    var body: some View {
-        
-        HStack {
-            Image(user.image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .clipShape(Circle())
-                .frame(width: 25)
-            Text(user.username)
-                .font(.subheadline)
-            Spacer()
-        }
-    }
-}
-
 struct PostVoteView: View {
      
     @ObservedObject var voteManager: VoteManager
@@ -73,7 +54,7 @@ struct TextPostView: View {
     
     var body: some View {
     
-        PostProfileView(user: postManager.textPost!.author)
+        ProfileHeader(image: Image(postManager.textPost!.author.image), username: postManager.textPost!.author.username)
         
         Text(postManager.textPost!.title).padding(.top, 8)
         
@@ -133,7 +114,7 @@ struct ItineraryPostView: View {
         }
         
         HStack(spacing: 20){
-            PostProfileView(user: postManager.itineraryPost!.author)
+            ProfileHeader(image: Image(postManager.itineraryPost!.author.image), username: postManager.itineraryPost!.author.username)
             
             Spacer()
             PostVoteView(voteItem: postManager.post)
@@ -182,6 +163,10 @@ struct PostCard: View {
     }
 }
 
-#Preview {
+#Preview("Guide") {
     PostCard(post: guide1)
+}
+
+#Preview("Post") {
+    PostCard(post: post1)
 }

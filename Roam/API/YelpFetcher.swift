@@ -6,6 +6,14 @@
 //
 
 import Foundation
+import SwiftUI
+
+enum FetchingState{
+    
+    case noSearch
+    case enterSearch(fromMainPage: Bool)  // 0 means it come from main page, 1 means it come from search result page
+    case completesSearching
+}
 
 @MainActor
 class YelpFetcher: ObservableObject {
@@ -13,8 +21,10 @@ class YelpFetcher: ObservableObject {
     @Published var searchText: String = ""
     @Published var locations = [LocationData]()
     @Published var locationDetail: LocationDetail?
-    @Published var isLoading: Bool  = false
+    @Published var searchingState: FetchingState = .noSearch
+    @Published var isLoading = false
     @Published var errorMessage: String? = nil
+    @Published var reviews = [LocationReview]()
     
     let service = APISerivce()
     
@@ -26,15 +36,16 @@ class YelpFetcher: ObservableObject {
         searchURLComponents.host = "api.yelp.com"
     }
     
-    func fetchAllLocation() async {
+    func fetchAllLocation(categories: String?) async {
         
         locations.removeAll()
-        isLoading = true
+        isLoading  = true
         
         searchURLComponents.path = "/v3/businesses/search"
         searchURLComponents.queryItems = [
-            URLQueryItem(name: "term", value: searchText),
-            URLQueryItem(name: "location", value: "Australia")
+            URLQueryItem(name: "term", value: ""),
+            URLQueryItem(name: "location", value: searchText),
+            URLQueryItem(name: "categories", value: categories ?? "")
         ]
         
         await service.fetch(VolumeData.self, url: searchURLComponents.url, apiKey: apiKey) { result in
@@ -45,8 +56,8 @@ class YelpFetcher: ObservableObject {
                 print(error)
             case .success(let volumeData):
                 if let location = volumeData.businesses {
-                    self.isLoading = false
                     self.locations.append(contentsOf: location)
+                    self.isLoading = false
                 }
             }
         }
@@ -54,11 +65,9 @@ class YelpFetcher: ObservableObject {
     
     func fetchLocationDetail(id: String) async{
         
-        isLoading = true
-        let url = URL(string: "https://api.yelp.com/v3/businesses/\(id)")!
+        isLoading  = true
+        let url = URL(string: "https://api.yelp.com/v3/businesses/\(id)")
 
-//        searchURLComponents.path = "v3/businesses/north-india-restaurant-san-francisco"
-        print(url)
         await service.fetch(LocationDetail.self, url: url, apiKey: apiKey) { result in
             
             switch result {
@@ -67,9 +76,35 @@ class YelpFetcher: ObservableObject {
                 print(error)
             case .success(let detail):
                 self.locationDetail = detail
+                self.searchingState = .completesSearching
+                self.isLoading = false
             }
         }
     }
     
-    
+    func fetchLocationReview(id: String) async {
+         
+        isLoading  = true
+        let url = URL(string: "https://api.yelp.com/v3/businesses/\(id)/reviews")
+        
+        searchURLComponents.path = "/v3/businesses/\(id)/reviews"
+        searchURLComponents.queryItems = [
+            URLQueryItem(name: "limit", value: "50")
+        ]
+        
+        await service.fetch(VolumeReviews.self, url: url, apiKey: apiKey) { result in
+            
+            switch result {
+            case .failure(let error):
+                self.errorMessage = error.localizedDescription
+                print(error)
+            case .success(let reviews):
+                if let reviews = reviews.reviews {
+                    self.searchingState = .completesSearching
+                    self.reviews.append(contentsOf: reviews)
+                    self.isLoading = false
+                }
+            }
+        }
+    }
 }

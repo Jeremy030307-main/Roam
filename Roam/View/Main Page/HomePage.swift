@@ -9,13 +9,15 @@ import SwiftUI
 
 struct HomePage: View {
     
+    @ObservedObject var yelpFetcher = YelpFetcher()
     @Namespace var searchBarAnimation
-    @State private var searching: CGFloat = 0
+    @State private var searching = false
     
     var body: some View {
         let targetSize = CGSize(width: UIScreen.main.bounds.size.width, height: UIScreen.main.bounds.size.height / 4.5)
         NavigationStack{
-            if searching == 0{
+            switch yelpFetcher.searchingState{
+            case .noSearch:
                 ZStack{
                     VStack {
                         
@@ -27,7 +29,6 @@ struct HomePage: View {
                     .ignoresSafeArea()
                     
                     VStack{
-                        
                         Image("Logo")
                             .resizable()
                             .aspectRatio(contentMode: .fit)
@@ -42,11 +43,11 @@ struct HomePage: View {
                             
                             Button{
                                 withAnimation(.easeInOut(duration: 0.5)) {
-                                    self.searching = 360
+                                    yelpFetcher.searchingState = .enterSearch(fromMainPage: true)
                                 }
                                 
                             } label: {
-                                SearchBar(searchText: .constant(""))
+                                SearchBar(searchText: .constant(""), height: 50)
                                     .matchedGeometryEffect(id: "selectedID", in: searchBarAnimation, isSource: true)
                                     .padding(.horizontal, 30)
                                     .disabled(true)
@@ -58,8 +59,11 @@ struct HomePage: View {
                     }
                     
                 }
-            } else {
-                SearchingView(searching: $searching, searchBarAnimation: searchBarAnimation)
+            case .enterSearch(fromMainPage: let fromMainPage):
+                SearchingView(yelpFetcher: yelpFetcher, searchBarAnimation: searchBarAnimation, fromMainPage: fromMainPage)
+            case .completesSearching:
+                SearchResultView(yelpFetcher: yelpFetcher, searchText: $yelpFetcher.searchText, searchBarAnimation: searchBarAnimation)
+                    .animation(.easeInOut, value: 20)
             }
         }
     }

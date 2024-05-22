@@ -12,6 +12,7 @@ struct SearchResultCard: View {
     @ObservedObject var yelpFetcher = YelpFetcher()
     var locationData: LocationData
     @State var locationDetail: LocationDetail?
+    @State var locationReviews: [LocationReview]?
     @State var showDetail = false
     
     var body: some View {
@@ -21,8 +22,11 @@ struct SearchResultCard: View {
             Button{
                 Task{
                     await yelpFetcher.fetchLocationDetail(id:locationData.id ?? "")
+                    await yelpFetcher.fetchLocationReview(id: locationData.id ?? "")
                     locationDetail = yelpFetcher.locationDetail
+                    locationReviews = yelpFetcher.reviews
                 }
+                
                 showDetail.toggle()
             }label: {
                 BlankCard(cardColor: Color(.secondarySystemBackground)) {
@@ -79,8 +83,11 @@ struct SearchResultCard: View {
                 }
             }
         }
+        .foregroundStyle(.primary)
         .sheet(isPresented: $showDetail, content: {
-            textfille(locationData: locationData, locationDetail: locationDetail)
+            if locationDetail != nil && locationReviews != nil{
+                BuisinessDetailView(locationData: locationData, detail: locationDetail!, reviews: locationReviews!)
+            }
         })
     }
     
@@ -90,4 +97,18 @@ struct SearchResultCard: View {
         let https = comps?.string
         return https
     }
+}
+
+#Preview {
+    SearchResultCard(locationData: LocationData(id: "molinari-delicatessen-san-francisco",
+                                                name: "Molinari Delicatessen",
+                                                rating: 4.5,
+                                                price: "$$",
+                                                phone: "+14154212337",
+                                                categories: ["Delis"],
+                                                reviewCount: 910,
+                                                imageURL: "http://s3-media4.fl.yelpcdn.com/bphoto/6He-NlZrAv2mDV-yg6jW3g/o.jpg",
+                                                latitude: 37.7983818054199,
+                                                longitude: -122.407821655273,
+                                                address: "373 Columbus Ave, San Francisco, 94133 CA, US"))
 }
