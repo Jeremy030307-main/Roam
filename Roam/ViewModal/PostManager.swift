@@ -13,11 +13,31 @@ enum VoteType {
 
 class VoteManager: ObservableObject {
     
-    var currentUser: User = user1
+    private var firebaseController = FirebaseController.shared
+    var currentUser: User = FirebaseController.shared.user
     @Published var voteItem: any Votable
+    var parentPost: (any Postable)?
+    var collectionName: String {
+        if voteItem is Post{
+            return "Post"
+        } else if voteItem is Guide {
+            return "Guide"
+        } else {
+            if let parent = parentPost {
+                if parent is Post {
+                    return "Post"
+                } else {
+                    return "Guide"
+                }
+            } else {
+                return ""
+            }
+        }
+    }
     
-    init(voteItem: any Votable) {
+    init(voteItem: any Votable, parentPost: (any Postable)?) {
         self.voteItem = voteItem
+        self.parentPost = parentPost
     }
     
     func upvote(){
@@ -31,8 +51,17 @@ class VoteManager: ObservableObject {
             if isDownvote(){
                 unvote(voteType: .downvote)
             }
-            voteItem.upvote.append(currentUser)
+            
+            if let parent = parentPost {
+                firebaseController.addStringToArray(stringtoAdd: currentUser.id ?? "", collectionPath: "\(collectionName)/\(parent.id.uuidString)/Comment", documentPath: voteItem.id.uuidString, attributeName: "upvote")
+            } else {
+                // add the user_id into the upvote array
+                firebaseController.addStringToArray(stringtoAdd: currentUser.id ?? "", collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: "upvote")
+            }
+            
+            // update the vote_count
             voteItem.vote_count += 1
+            self.updateVoteCount()
         }
     }
     
@@ -46,72 +75,105 @@ class VoteManager: ObservableObject {
             if isUpvote(){
                 unvote(voteType: .upvote)
             }
-            voteItem.downvote.append(currentUser)
+            
+            if let parent = parentPost {
+                firebaseController.addStringToArray(stringtoAdd: currentUser.id ?? "", collectionPath: "\(collectionName)/\(parent.id.uuidString)/Comment", documentPath: voteItem.id.uuidString, attributeName: "downvote")
+            } else{
+                // add the user_id into the downvote array
+                firebaseController.addStringToArray(stringtoAdd: currentUser.id ?? "", collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: "downvote")
+            }
+            
+            // update the vote_count
             voteItem.vote_count -= 1
+            self.updateVoteCount()
+
         }
     }
     
-    internal func unvote(voteType: VoteType){
+    func unvote(voteType: VoteType){
         
+        let attributeName: String
         switch voteType {
             case .upvote:
-                guard let removeIndex = voteItem.upvote.firstIndex(of: currentUser) else {
-                    print("User not found")
-                    return
-                }
-            voteItem.upvote.remove(at: removeIndex)
+            
+            attributeName = "upvote"
             voteItem.vote_count -= 1
                 
             case .downvote:
-                guard let removeIndex = voteItem.downvote.firstIndex(of: currentUser) else {
-                    print("User not found")
-                    return
-                }
-            voteItem.downvote.remove(at: removeIndex)
+            
+            attributeName = "downvote"
             voteItem.vote_count += 1
             }
+        
+        Task{
+            // firest remove the current user from upvote array
+            if let parent = parentPost {
+                await firebaseController.removeStringFromArray(stringToremove:currentUser.id ?? "", collectionPath:"\(collectionName)/\(parent.id.uuidString)/Comment", documentPath:voteItem.id.uuidString, attributeName:attributeName)
+            } else {
+                await firebaseController.removeStringFromArray(stringToremove: currentUser.id ?? "", collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: attributeName)
+            }
+        }
+        self.updateVoteCount()
+
     }
     
     func isUpvote() -> Bool{
-        return voteItem.upvote.contains(currentUser)
+        return voteItem.upvote.contains(currentUser.id ?? "")
     }
     
     func isDownvote() -> Bool{
-        return voteItem.downvote.contains(currentUser)
+        return voteItem.downvote.contains(currentUser.id ?? "")
     }
     
     func voteCount() -> Int {
         return voteItem.vote_count
     }
+    
+    private func updateVoteCount(){
+        if let parent = parentPost{
+            firebaseController.updateField(object:voteItem.vote_count, collectionPath:"\(collectionName)/\(parent.id.uuidString)/Comment", documentPath:voteItem.id.uuidString, attributeName:"vote_count")
+        } else {
+            firebaseController.updateField(object: voteItem.vote_count, collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: "vote_count")
+        }
+    }
 }
 
 class PostManager: ObservableObject {
     
-    var currentUser: User = user1
+    private var firebaseController = FirebaseController.shared
+    private var currentUser: User = FirebaseController.shared.user
     var post: any Postable
     @Published var comment: String = ""
     @Published var textPost: Post?
     @Published var itineraryPost: Guide?
+    var collectionName: String = ""
     
     init(post: any Postable) {
         self.post = post
-        for comment in post1Comment {
-            self.post.comments.append(comment)
-            self.post.comment_count += 1
-        }
         
         if let normalPost = post as? Post {
             textPost = normalPost
+            collectionName = "Post"
         } else if let itineraryPost = post as? Guide {
             self.itineraryPost = itineraryPost
+            collectionName = "Guide"
         }
     }
     
     func addComment(){
-        let newComment = Comment(user: currentUser, post: post, content: comment)
-        post.comments.append(newComment)
-        post.comment_count += 1
-        comment = ""
+        let newComment = Comment(authorID: currentUser.id ?? "", authorName: currentUser.name ?? "", authorImage: currentUser.image ?? "", content: comment)
+        
+        // first create a new comment document inside the subcollection of this particular post
+        if let documentPath = firebaseController.addDocument(itemToAdd: newComment, collectionPath: "\(collectionName)/\(post.id.uuidString)/Comment", documentPath: newComment.id.uuidString){
+            
+            // if sucessfully add, add the reference into the post
+            firebaseController.addReferenceToArray(referenceToAdd: documentPath, collectionPath: collectionName, documentPath: post.id.uuidString, attributeName: "comments")
+            
+            // and update the comment count
+            post.comment_count += 1
+            firebaseController.updateField(object: post.comment_count, collectionPath: collectionName, documentPath: post.id.uuidString, attributeName: "comment_count")
+            comment = ""
+        }
     }
     
 }

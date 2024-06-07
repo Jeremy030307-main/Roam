@@ -15,6 +15,31 @@ class EventManager: ObservableObject {
     
     @Published var event: Event
     
+    @Published var eventCategory: EventType = .accomodation
+    @Published var edittingStartDay: Int = 0
+    @Published var edittingEndDay: Int = 0
+    @Published var edittingStartTime: Date = .now
+    @Published var edittingEndTime: Date = .now
+    @Published var edittingLocation: LocationData?
+    @Published var edittingDestination: LocationData?
+    var invalidEdittingEvent : Bool {
+        if edittingEndDay < edittingStartDay {
+            return true
+        } else  if edittingEndDay == edittingStartDay{
+            if edittingEndTime < edittingStartTime {
+                return true
+            }
+        }
+        
+        if eventCategory == .flight || eventCategory == .carRental {
+            if edittingDestination == nil {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
     init(event: Event) {
         self.event = event
     }
@@ -45,53 +70,74 @@ class EventManager: ObservableObject {
     
     func getEventHeight(atDay: Int) -> CGFloat {
         
+        let startHour = Calendar.current.dateComponents([.hour], from: event.startTime)
+        let startMin = Calendar.current.dateComponents([.minute], from: event.startTime)
+        let endHour = Calendar.current.dateComponents([.hour], from: event.endTime)
+        let endMin = Calendar.current.dateComponents([.minute], from: event.endTime)
+        print(event.location.name, startHour, startMin, endHour, endMin)
         var minute: Int = 0
-        
         if event.startDay == event.endDay {  // the event start and end at same day
             let diffComponents = Calendar.current.dateComponents([.minute], from: event.startTime  , to: event.endTime)
-            minute = diffComponents.minute ?? 0
+            if let startHour = startHour.hour, let endHour = endHour.hour, let startMin = startMin.minute, let endMin = endMin.minute {
+                minute = (endHour*60 + endMin) - (startHour*60 + startMin)
+            }
 
         } else {  // the event start at one day and end at one day
-            
-            
             if atDay == event.startDay{  // display block the part of event that appear at firsst dat
-                let dateComponents = Calendar.current.dateComponents([.hour, .minute], from: event.startTime)
-                if let dateHour = dateComponents.hour, let dateMinute = dateComponents.minute {
+                if let dateHour = startHour.hour, let dateMinute = startMin.minute {
                     minute = (24*60) - (dateHour*60) - dateMinute
+                    print(minute, 1)
 
                 }
                 
             } else if atDay == event.endDay {
-                let dateComponents = Calendar.current.dateComponents([.hour, .minute], from: event.endTime)
-                if let dateHour = dateComponents.hour, let dateMinute = dateComponents.minute {
+                if let dateHour = endHour.hour, let dateMinute = endMin.minute {
                     minute = (dateHour*60) + dateMinute
+                    print(minute, 2)
                 }
                 
             } else {
                 minute = (24*60)
             }
         }
-        
+        print(minute, event.location.name)
         return CGFloat(Double(minute) * 1.5)
     }
     
     func getEventDurationText() -> String {
         
-        let diffComponents = Calendar.current.dateComponents([.hour, .minute], from: event.startTime  , to: event.endTime  )
+        let startHour = Calendar.current.dateComponents([.hour], from: event.startTime).hour ?? 0
+        let startMin = Calendar.current.dateComponents([.minute], from: event.startTime).minute ?? 0
+        let endHour = Calendar.current.dateComponents([.hour], from: event.endTime).hour ?? 0
+        let endMin = Calendar.current.dateComponents([.minute], from: event.endTime).minute ?? 0
         
-        guard let hours: Int = diffComponents.hour, let minutes: Int = diffComponents.minute else {
-            return ""
+        var duration: Int = 0
+        if event.startDay == event.endDay{
+            duration = ((endHour*60) + endMin) - ((startHour*60) + startMin)
+        } else {
+            duration = ((24*60) - ((startHour*60) + startMin) + ((endHour*60) + endMin))
+            print(duration,startHour,startMin,endHour,endMin)
+        }
+        let hours = Int(floor(Double(duration/60)))
+        print(hours)
+        let minutes = duration - hours*60
+        print(minutes)
+        var returnText = ""
+        if event.endDay - event.startDay > 2{
+            let dayBetween = event.endDay - event.startDay - 1
+            returnText = dayBetween>1 ? "\(dayBetween) days": "\(dayBetween) day"
         }
         
         if minutes == 0 {
-            return  hours > 1 ? "\(hours) hours":"\(hours) hour"
+            returnText += " " + (hours > 1 ? "\(hours) hours":"\(hours) hour")
         }
         else {
             let firstPart = hours > 1 ? "\(hours) hours":"\(hours) hour"
             let secondPart = minutes > 1 ? "\(minutes) minutes": "\(minutes) minute"
-            return firstPart + " " + secondPart
+            returnText += " " + firstPart + " " + secondPart
         }
         
+        return returnText
     }
     
     func getIcon() -> Image {
@@ -114,13 +160,25 @@ class EventManager: ObservableObject {
         for _ in 0..<5{
             if ratingCounter == 0.5{
                 returnList.append("star.leadinghalf.filled")
-            }else if ratingCounter <= 0{
+            }else if ratingCounter ?? 0 <= 0{
                 returnList.append("star")
             }else {
                 returnList.append("star.fill")
             }
-            ratingCounter-=1
+            ratingCounter!-=1
         }
         return returnList
+    }
+    
+    func updateValue(){
+        self.eventCategory = EventType(rawValue: self.event.type) ?? .accomodation
+        self.edittingStartDay = event.startDay
+        self.edittingEndDay = event.endDay
+        self.edittingStartTime = event.startTime
+        self.edittingEndTime = event.endTime
+        self.edittingLocation = LocationData(location: event.location)
+        if let destination = event.destination{
+            self.edittingDestination = LocationData(location: destination)
+        }
     }
 }

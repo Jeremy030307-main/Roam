@@ -115,7 +115,7 @@ struct AddExpenseForm: View {
                 TextField("Enter description", text: $tripManager.newExpenseTitle)
                 if tripManager.trip.startDate == nil{
                     Picker("Day", selection: $tripManager.newExpenseDay){
-                        ForEach(1..<tripManager.trip.totalDays){ day in
+                        ForEach(1..<(tripManager.trip.totalDays ?? 0)+1){ day in
                             Text("Day \(day)").tag(day)
                         }
                     }

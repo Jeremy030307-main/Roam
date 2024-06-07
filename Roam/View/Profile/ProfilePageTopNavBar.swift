@@ -15,6 +15,7 @@ enum ProfileTabItem : String, CaseIterable{
 struct ProfilePageTopNavBar: View {
     
     @Binding var tabSelection: ProfileTabItem
+    @Binding var addNewPost: Bool
     @Namespace private var tabAnimation
 
     var body: some View {
@@ -56,6 +57,16 @@ struct ProfilePageTopNavBar: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            .overlay {
+                Button{
+                    addNewPost.toggle()
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .resizable()
+                        .frame(width: 48, height: 48)
+                        .foregroundStyle(.accent)
+                }
+            }
         }
         .padding()
     }
@@ -63,5 +74,5 @@ struct ProfilePageTopNavBar: View {
 
 
 #Preview {
-    ProfilePageTopNavBar(tabSelection: .constant(.guide))
+    ProfilePageTopNavBar(tabSelection: .constant(.guide), addNewPost: .constant(false))
 }

@@ -1,18 +1,18 @@
 //
-//  NotificationPage.swift
+//  AuthenthicationView.swift
 //  Roam
 //
-//  Created by Jeremy Teng  on 27/04/2024.
+//  Created by Jeremy Teng  on 23/05/2024.
 //
 
 import SwiftUI
 
-struct NotificationPage: View {
+struct AuthenthicationView: View {
     var body: some View {
         Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
     }
 }
 
 #Preview {
-    NotificationPage()
+    AuthenthicationView()
 }

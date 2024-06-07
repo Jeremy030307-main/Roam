@@ -7,67 +7,101 @@
 
 import Foundation
 
-protocol Votable:Hashable {
-    
-    var upvote: [User] {get set}
-    var downvote: [User] {get set}
-    var vote_count: Int {get set}
-}
-
-protocol Postable: Votable {
+protocol Votable:Hashable, Codable{
     
     var id: UUID {get set}
-    var author: User {get set}
+    var vote_count: Int {get set}
+    var upvote: [String] {get set}
+    var downvote: [String] {get set}
+}
+
+protocol Postable: Votable, Codable {
+    
+    var id: UUID {get set}
+    var authorID: String {get set}
+    var authorName: String {get set}
+    var authorImage: String {get set}
     var comments: [Comment] {get set}
     var comment_count: Int {get set}
 }
 
-struct Post: Postable, Identifiable{
+struct Post: Postable, Identifiable, Codable{
     
     var id = UUID()
-    var author: User
+    var authorID: String
+    var authorName: String
+    var authorImage: String
+
     var title: String
     var content: String
     
-    var upvote: [User] = []
-    var downvote: [User] = []
+    var upvote: [String] = []
+    var downvote: [String] = []
     var vote_count: Int = 0
     
     var comments: [Comment] = []
     var comment_count: Int = 0
+    
+    var date_created: Date? = Date()
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case authorID
+        case authorName
+        case authorImage
+        case title
+        case content
+        case upvote
+        case downvote
+        case vote_count
+        case comment_count
+        case date_created
+    }
 }
 
-struct Guide: Postable, Identifiable{
+struct Guide: Postable, Identifiable, Codable{
     
     var id = UUID()
-    var author: User
-    var itinerary : Trip
+    var authorID: String
+    var authorName: String
+    var authorImage: String
+
+    var itinerary : Trip?
     
-    var upvote: [User] = []
-    var downvote: [User] = []
+    var upvote: [String] = []
+    var downvote: [String] = []
     var vote_count: Int = 0
     
     var comments: [Comment] = []
     var comment_count: Int = 0
+    var date_created: Date? = Date()
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case authorID
+        case authorName
+        case authorImage
+//        case itinerary
+        case upvote
+        case downvote
+        case vote_count
+        case comment_count
+        case date_created
+    }
 }
 
-struct Comment: Identifiable, Votable {
+struct Comment: Identifiable, Votable, Codable{
 
     var id = UUID()
-    var user: User
-    var post: any Postable
+    var authorID: String
+    var authorName: String
+    var authorImage: String
+
     var content: String
     
-    var upvote: [User] = []
-    var downvote: [User] = []
+    var upvote: [String] = []
+    var downvote: [String] = []
     var vote_count: Int = 0
-    
-    func hash(into myhasher: inout Hasher) {
-            // Using id to uniquely identify each person.
-            myhasher.combine(id)
-        }
-    
-    static func == (lhs: Comment, rhs: Comment) -> Bool {
-        return (lhs.id == rhs.id)
-    }
+    var date_created: Date? = Date()
+
 }

@@ -17,7 +17,7 @@ struct ProfileCard: View {
             HStack(alignment: .top){
                 
                 HStack(alignment: .center) {
-                    Image(user.image)
+                    Image(user.image ?? "")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 80)
@@ -27,8 +27,8 @@ struct ProfileCard: View {
                 .padding(.horizontal, 5)
                 
                 VStack(alignment:.leading){
-                    Text(user.name).font(.title2).bold()
-                    Text("@" + user.username).font(.subheadline).opacity(0.8)
+                    Text(user.name ?? "").font(.title2).bold()
+                    Text("@" + (user.username ?? "")).font(.subheadline).opacity(0.8)
                     
                     HStack {
                         VStack{

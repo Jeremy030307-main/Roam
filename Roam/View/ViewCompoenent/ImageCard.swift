@@ -9,15 +9,16 @@ import SwiftUI
 
 struct SideImageCard<Content: View>: View {
     
-    var image: Image
+    var image: String
     let content: Content
-    @State var textHeight: CGFloat = CGFloat()
+    var textHeight: CGFloat
     @State var width: CGFloat = CGFloat()
     var backgroundColor: Color
     
-    init(image: Image, backgroundColor: Color, @ViewBuilder content: () -> Content) {
+    init(image: String, backgroundColor: Color, textHeight: CGFloat, @ViewBuilder content: () -> Content) {
         self.image = image
         self.backgroundColor = backgroundColor
+        self.textHeight = textHeight
         self.content = content()
     }
     
@@ -25,23 +26,29 @@ struct SideImageCard<Content: View>: View {
     
         HStack(alignment: .top){
             
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: textHeight)
-                .clipped()
+            VStack{
+                AsyncImage(url: URL(string: convertHTTP(url: self.image) ?? "")){ phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: width, height: textHeight)
+                            .clipped()
+                        
+                    } else if phase.error != nil {
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .imageScale(.large)
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(.secondary)
+                        
+                    } else {
+                        ProgressView()
+                    }
+                }
+            }
+            .frame(width: width, height: textHeight)
+            
             content
-                .background(
-                    GeometryReader { geometry in
-                        Path { path in
-                            let height = geometry.size.height
-                            DispatchQueue.main.async {
-                                if self.textHeight != height {
-                                    self.textHeight = height
-                                }
-                            }
-                        }
-                    })
         }
         .frame(height: textHeight)
         .frame(maxWidth: .infinity)
@@ -60,6 +67,13 @@ struct SideImageCard<Content: View>: View {
             })
 
         }
+        
+        func convertHTTP(url: String) -> String? {
+            var comps = URLComponents(string: url)
+            comps?.scheme = "https"
+            let https = comps?.string
+            return https
+        }
 }
 
 struct TopImagaeCard<Content: View>: View {
@@ -67,11 +81,11 @@ struct TopImagaeCard<Content: View>: View {
     var image: Image
     let content: Content
     var backgroundColor: Color
+    var height: CGFloat
     
-    @State var height: CGFloat = CGFloat()
-    
-    init(image: Image, backgroundColor: Color, @ViewBuilder content: () -> Content) {
+    init(image: Image, backgroundColor: Color, height: CGFloat, @ViewBuilder content: () -> Content) {
         self.image = image
+        self.height = height
         self.backgroundColor = backgroundColor
         self.content = content()
     }
@@ -83,23 +97,13 @@ struct TopImagaeCard<Content: View>: View {
             image
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(height: height > 200 ? 200: height/2)
+                .frame(height: height/2 > 150 ? 150: height/2)
                 .frame(maxWidth: .infinity)
                 .clipped()
             content
-                .background(
-                    GeometryReader { geometry in
-                        Path { path in
-                            let height = geometry.size.height
-                            DispatchQueue.main.async {
-                                if self.height != height {
-                                    self.height = height
-                                }
-                            }
-                        }
-                    })
         }
         .frame(maxWidth: .infinity)
+        .frame(height: height)
         .background(backgroundColor)
         .cornerRadius(10)
 

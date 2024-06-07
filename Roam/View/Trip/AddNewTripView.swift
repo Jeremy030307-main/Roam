@@ -14,7 +14,7 @@ enum TripLengthType {
 
 struct AddNewTripView: View {
     
-    @ObservedObject var userManager: UserManager
+    @EnvironmentObject var userManager: UserManager
     @Environment(\.dismiss) var dismiss
     @ObservedObject var locationService: CitySearchViewModal = CitySearchViewModal()
     
@@ -31,6 +31,27 @@ struct AddNewTripView: View {
     
     @State var addPax = false
     @State var pax: Int = 1
+    
+    var inValidTrip : Bool {
+        if title.trimmingCharacters(in: .whitespaces).isEmpty{
+            return true
+        }
+        if destination.trimmingCharacters(in: .whitespaces).isEmpty{
+            return true
+        }
+        if invalidPeriod {
+            return true
+        }
+        return false
+    }
+    
+    var invalidPeriod : Bool {
+        if Calendar.current.isDate(endDate, inSameDayAs: startDate){
+            return false
+        } else {
+            return endDate < startDate
+        }
+    }
     
     var body: some View {
         
@@ -89,11 +110,15 @@ struct AddNewTripView: View {
                         }
                     } footer: {
                         if lengthTypeSelection == .date{
-                            HStack{
-                                Spacer()
-                                Text("\(tripLength) ").bold() + Text(tripLength>1 ? "days":"day").bold()
+                            if !invalidPeriod{
+                                HStack{
+                                    Spacer()
+                                    Text("\(tripLength) ").bold() + Text(tripLength>1 ? "days":"day").bold()
+                                }
+                                .padding(.trailing)
+                            } else {
+                                Text("End date should be after start date. ")
                             }
-                            .padding(.trailing)
                         }
                     }
                     .onChange(of: lengthTypeSelection) { oldValue, newValue in
@@ -162,14 +187,16 @@ struct AddNewTripView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     if enterDestination == false {
                         Button("Save"){
-                            userManager.addNewTrip(
-                                title: self.title,
-                                destination: self.destination,
-                                totalDays: self.tripLength,
-                                startDate: lengthTypeSelection == .date ? self.startDate: nil, endDate: lengthTypeSelection == .date ? self.endDate: nil,
-                                pax: addPax == true ? self.pax: nil)
+                            Task{
+                                await userManager.addNewTrip(
+                                    title: self.title,
+                                    destination: self.destination,
+                                    totalDays: self.tripLength,
+                                    startDate: lengthTypeSelection == .date ? self.startDate: nil, endDate: lengthTypeSelection == .date ? self.endDate: nil,
+                                    pax: addPax == true ? self.pax: nil)
+                            }
                             dismiss()
-                        }.disabled(title.trimmingCharacters(in: .whitespaces).isEmpty && destination.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }.disabled(inValidTrip)
                     } else {
                         Button("Cancel"){
                             withAnimation(.easeInOut) {
@@ -199,5 +226,7 @@ struct AddNewTripView: View {
 }
 
 #Preview {
-    AddNewTripView(userManager: UserManager(user: user10))
+    AddNewTripView()
+        .environmentObject(UserManager(user: FirebaseController.shared.user))
+
 }

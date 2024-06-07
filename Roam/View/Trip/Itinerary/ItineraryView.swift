@@ -82,7 +82,9 @@ struct ItineraryDayView: View {
     
     @ObservedObject var tripManager: TripManager
     @State var screenWidth: CGFloat?
+    
     let day: Int
+    let editable: Bool
     
     var body: some View {
         ScrollViewReader{ scrollProxy in
@@ -96,26 +98,43 @@ struct ItineraryDayView: View {
                         Spacer()
                     }
                     
-                    VStack(alignment: .leading){
-                        ForEach(tripManager.trip.events[day] ?? []){ event in
-                            let x = tripManager.getDistanceTwoEvent(day: day, eventsOfTheDay: tripManager.trip.events[day] ?? [], event: event)
+                    VStack(spacing: 0){
+                        ForEach(1..<25){x in
+                            VStack(alignment: .leading){
+                                HStack(alignment: .bottom){
+                                    Text("")
+                                        .frame(maxWidth: .infinity)
+                                }
+                            }
+                            .frame(height: 90)
+                            .border(Color.black, width: 0.2)
+                            .opacity(0.5)
+                        }
+                        Spacer()
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 0){
+                        ForEach(Array(tripManager.trip.events[day-1].events.enumerated()), id: \.1.id) {index, event in
+                            let eventDistance = tripManager.getDistanceTwoEvent(day: day, eventIndex: index)
                             VStack{
                             }
                             .frame(maxWidth: .infinity)
-                            .frame(height: CGFloat(x))
-                            EventCardView(event: event, day: day)
+                            .border(Color.black)
+                            .frame(height: CGFloat(eventDistance))
+                            .padding(0)
+                            EventCardView(event: event, day: self.day, eventIndex: index, editable: editable)
                                 .padding(.horizontal)
-                                .padding(.vertical, 5)
-                                .id(event)
+                                .id(index)
+                                .environmentObject(tripManager)
                         }
                         Spacer()
                     }
                 }
-                .frame(minHeight: 2400)
+                .frame(minHeight: 2160)
             
             }
             .onAppear{
-                scrollProxy.scrollTo(tripManager.trip.events[day]?.first ?? [].first, anchor: .top)
+                scrollProxy.scrollTo(0, anchor: .top)
             }
             .background(Color(.secondarySystemBackground))
             .background(
@@ -137,39 +156,44 @@ struct ItineraryView: View {
     
     @ObservedObject var tripManager: TripManager
     @State var addEvent = false
+    let editable: Bool
     
     var body: some View {
         NavigationStack{
             ZStack(alignment: .bottom){
                 VStack{
-                    ItineraryTopNavBar(totalDays: tripManager.trip.totalDays,
+                    ItineraryTopNavBar(totalDays: tripManager.trip.totalDays ?? 0,
                                        startDate: tripManager.trip.startDate, endDate: tripManager.trip.endDate, daySelected: $tripManager.selectedDay)
                     .padding(.top, 10)
 
                     Divider()
                     TabView(selection: $tripManager.selectedDay){
-                        ForEach(1..<tripManager.trip.totalDays+1){day in
-                            ItineraryDayView(tripManager: tripManager, day: tripManager.selectedDay)
+                        ForEach(1..<(tripManager.trip.totalDays ?? 0)+1){day in
+                            ItineraryDayView(tripManager: tripManager, day: tripManager.selectedDay, editable: editable)
                                 .tag(day)
                                 .tabItem { Text("\(day)") }
                                 .toolbar(.hidden, for: .tabBar)
+                                .simultaneousGesture(DragGesture())
 
                         }
                     }
                     .animation(.easeOut(duration: 0.2), value: tripManager.selectedDay)
+                    .tabViewStyle(.page(indexDisplayMode: .never))
                 }
                 
-                HStack{
-                    Spacer()
-                    Button{
-                        addEvent.toggle()
-                    }label: {
-                        Image(systemName: "plus.circle.fill")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(height: 50)
+                if editable{
+                    HStack{
+                        Spacer()
+                        Button{
+                            addEvent.toggle()
+                        }label: {
+                            Image(systemName: "plus.circle.fill")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(height: 50)
+                        }
+                        .padding(35)
                     }
-                    .padding(35)
                 }
             }
             .frame(maxHeight: .infinity)
@@ -178,22 +202,22 @@ struct ItineraryView: View {
                 ToolbarItem(placement: .principal) {
                     VStack {
                         Text("Itinerary").font(.headline)
-                        Text(tripManager.trip.title).font(.subheadline)
+                        Text(tripManager.trip.title ?? "").font(.subheadline)
                     }
                 }
             }
             .background(Color(.secondarySystemBackground))
         }
         .sheet(isPresented: $addEvent) {
-            AddEventView(tripManager: tripManager, addingEvent: $addEvent)
+            AddEventView(tripManager: tripManager, addingEvent: $addEvent, previousView: .constant(false))
         }
     }
 }
 
 #Preview("Main View") {
-    ItineraryView(tripManager: TripManager(trip: itinerary2))
+    ItineraryView(tripManager: TripManager(trip: itinerary2), editable: false)
 }
 
 #Preview("Day view") {
-    ItineraryDayView(tripManager: TripManager(trip: itinerary2), day: 1)
+    ItineraryDayView(tripManager: TripManager(trip: itinerary2), day: 1, editable: false )
 }

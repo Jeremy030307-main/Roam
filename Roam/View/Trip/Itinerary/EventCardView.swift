@@ -12,11 +12,15 @@ struct EventCardView: View {
     @ObservedObject var eventManager: EventManager
     @State var showDetail = false
     
-    var day: Int
+    let day: Int
+    let eventIndex: Int
+    let editable: Bool
     
-    init(event: Event, day: Int) {
+    init(event: Event, day: Int, eventIndex: Int, editable: Bool) {
         self.eventManager = EventManager(event: event)
         self.day = day
+        self.eventIndex = eventIndex
+        self.editable = editable
     }
     var body: some View {
         HStack(alignment: .top){
@@ -49,7 +53,7 @@ struct EventCardView: View {
             
         }
         .sheet(isPresented: $showDetail){
-            EventDetailView(eventManager: eventManager)
+            EventDetailView(eventManager: eventManager, eventDay: day, eventIndex: eventIndex, editable: editable)
         }
         
     }
@@ -71,7 +75,7 @@ struct TransportationEventCard: View {
             LazyVGrid(columns: columns, content: {
                 VStack(alignment: .center){
                     Text(eventManager.getStartTimeText()).font(.system(size: 15)).bold()
-                    Text(eventManager.event.location.name).font(.system(size: 10)).opacity(0.5).padding(.top, 0.2)
+                    Text(eventManager.event.location.name ?? "").font(.system(size: 10)).opacity(0.5).padding(.top, 0.2)
                 }
                 
                 ZStack{
@@ -84,10 +88,8 @@ struct TransportationEventCard: View {
                     HorizontalLine()
                         .stroke(style: StrokeStyle(lineWidth: 1, dash: [5]))
                         .frame(height: 1)
-                    
                     VStack(){
                         Spacer()
-                        Text(eventManager.getEventDurationText()).font(.custom("duration", fixedSize: 10))
                     }
                 
                 }
@@ -98,8 +100,9 @@ struct TransportationEventCard: View {
                     Text(eventManager.event.destination?.name ?? "").font(.system(size: 10)).opacity(0.5).padding(.top, 0.2)
                 }
             })
-            .frame(height: eventManager.getEventHeight(atDay: day))
+            .frame(maxHeight: eventManager.getEventHeight(atDay: day))
         }
+        .frame(maxHeight: eventManager.getEventHeight(atDay: day))
     }
 }
     
@@ -113,23 +116,23 @@ struct PlaceEventCard: View {
         if eventManager.getEventHeight(atDay: day) <= 50 {
             BlankCard(cardColor: Color(.systemBackground)) {
                 VStack(alignment: .leading){
-                    Text(eventManager.event.location.name).font(.headline)
-                    
+                    Text(eventManager.event.location.name ?? "").font(.headline)
                     HStack{
                         Text(eventManager.getEventDurationText()).font(.subheadline).opacity(0.5)
                         Spacer()
                         Text("\(eventManager.getEndTimeText())").font(.subheadline).opacity(0.5)
                     }
-                }
+                }.frame(maxHeight: eventManager.getEventHeight(atDay: day))
             }
+            .frame(maxHeight: eventManager.getEventHeight(atDay: day))
         }
         else if eventManager.getEventHeight(atDay: day) > 180{
-            TopImagaeCard(image: Image(eventManager.event.location.image ?? ""), backgroundColor: Color(.systemBackground)) {
+            TopImagaeCard(image: Image(eventManager.event.location.image ?? ""), backgroundColor: Color(.systemBackground), height: eventManager.getEventHeight(atDay: day)) {
                 VStack(alignment: .leading){
-                    Text(eventManager.event.location.name).font(.headline)
+                    Text(eventManager.event.location.name ?? "").font(.headline)
                         .multilineTextAlignment(.leading)
                     
-                    Text(eventManager.event.location.address).lineLimit(1).font(.subheadline).opacity(0.5)
+                    Text("\(eventManager.getEventHeight(atDay: day))" + (eventManager.event.location.address ?? "")).lineLimit(1).font(.subheadline).opacity(0.5)
                     
                     Spacer()
                     HStack{
@@ -138,18 +141,16 @@ struct PlaceEventCard: View {
                         Text("\(eventManager.getEndTimeText())").font(.subheadline).opacity(0.5)
                     }
                 }
-                .frame(height: eventManager.getEventHeight(atDay: day)/2)
                 .frame(maxWidth: .infinity)
                 .padding(.trailing, 10)
                 .padding(.vertical, 5)
             }
         }else {
-            SideImageCard(image: Image(eventManager.event.location.image ?? ""), backgroundColor: Color(.systemBackground)) {
+            SideImageCard(image: eventManager.event.location.image ?? "", backgroundColor: Color(.systemBackground), textHeight: eventManager.getEventHeight(atDay: day)) {
                 VStack(alignment: .leading){
-                    Text(eventManager.event.location.name).font(.headline)
+                    Text(eventManager.event.location.name ?? "").font(.headline)
                         .multilineTextAlignment(.leading)
-                    
-                    Text(eventManager.event.location.address).lineLimit(1).font(.subheadline).opacity(0.5)
+                    Text(eventManager.event.location.address ?? "").lineLimit(1).font(.subheadline).opacity(0.5)
                     
                     Spacer()
                     
@@ -178,26 +179,31 @@ struct PeriodicEventCard: View {
     var body: some View{
         HStack{
             VStack(alignment: .leading){
-                Text((day == eventManager.event.startDay ? startText: endText) + " at " + eventManager.event.location.name).lineLimit(1).font(.headline)
+                if eventManager.event.startDay == eventManager.event.endDay{
+                    
+                } else {
+                    
+                }
+                Text((day == eventManager.event.startDay ? startText: endText) + " at " + (eventManager.event.location.name ?? "")).lineLimit(1).font(.headline)
             }
 
             Spacer()
             
             Image(systemName: "chevron.forward").padding(.trailing, 10)
         }
-        .frame(height: 30)
+        .frame(height: 45)
         .background(.quinary).cornerRadius(5)
     }
 }
 
 #Preview("Place Event") {
-    EventCardView(event: event3, day: 1)
+    EventCardView(event: event3, day: 1, eventIndex: 0, editable: false)
 }
 
 #Preview("Transportation Event") {
-    EventCardView(event: event1, day: 1)
+    EventCardView(event: event1, day: 1, eventIndex: 0, editable: false)
 }
 
 #Preview("Periodic Event"){
-    EventCardView(event: event2, day: 1)
+    EventCardView(event: event2, day: 1, eventIndex: 0, editable: false)
 }

@@ -57,7 +57,6 @@ enum SavePlaceIcon: String, CaseIterable, Identifiable {
     case capping = "tent.2.circle.fill"
     
     var id: Self{ self }
-
 }
 
 enum EventType: Int, CaseIterable,Identifiable {
@@ -96,49 +95,6 @@ enum EventType: Int, CaseIterable,Identifiable {
         }
     }
     
-}
-
-struct Trip: Hashable , Identifiable{
-    
-    var id = UUID()
-    
-    var image: String
-    var title: String
-    var destination: String
-    
-    var startDate: Date?
-    var endDate: Date?
-    var totalDays: Int
-    
-    var pax: Int?
-    var totalSpent: Int?
-    
-    var savedPlaces: [SavedPlace] = []
-    var events: [Int : [Event]] = [:]
-    var expenses: [Int: [Expense]] = [:]
-    var checklist: [Checklist] = []
-}
-
-struct SavedPlace: Hashable , Identifiable{
-    
-    var id = UUID()
-    var title: String
-    var icon: String
-    var color: Int
-    var places: [String] = []
-}
-
-struct Event: Hashable, Identifiable {
-    
-    var id = UUID()
-    var type: Int
-    var startDay: Int
-    var endDay: Int
-    var startTime: Date
-    var endTime: Date
-    var location: Location
-    var destination: Location?
-    var expense: Double?
 }
 
 enum ExpenseCategory: Int, CaseIterable, Identifiable {
@@ -184,8 +140,124 @@ enum ExpenseCategory: Int, CaseIterable, Identifiable {
     }
 }
 
-struct Expense: Hashable, Identifiable {
+struct Trip: Hashable , Identifiable, Codable{
     
+    var id = UUID()
+    
+    var image: String?
+    var title: String?
+    var destination: String?
+    
+    var startDate: Date?
+    var endDate: Date?
+    var totalDays: Int?
+    
+    var pax: Int?
+    var totalSpent: Int?
+    
+    var savedPlaces: [SavedPlace] = []
+    var events: [EventPerDay] = []
+    var expenses: [ExpensePerDay] = []
+    var checklist: [ChecklistCateogry] = []
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case image
+        case title
+        case destination
+        case startDate
+        case endDate
+        case totalDays
+        case pax
+        case totalSpent
+    }
+    
+    init(id: UUID = UUID(), image: String? = nil, title: String? = nil, destination: String? = nil, startDate: Date? = nil, endDate: Date? = nil, totalDays: Int? = nil, pax: Int? = nil, totalSpent: Int? = nil, savedPlaces: [SavedPlace] = [], events: [EventPerDay]=[], expenses: [ExpensePerDay]=[], checklist: [ChecklistCateogry]=[]) {
+        self.id = id
+        self.image = image
+        self.title = title
+        self.destination = destination
+        self.startDate = startDate
+        self.endDate = endDate
+        self.totalDays = totalDays
+        self.pax = pax
+        self.totalSpent = totalSpent
+        self.savedPlaces = savedPlaces
+        self.events = events
+        self.expenses = expenses
+        self.checklist = checklist
+    }
+    
+    init(trip: Trip){
+        self = trip
+        
+        self.id = UUID()
+        for index in 0 ..< self.savedPlaces.count {
+            self.savedPlaces[index].id = UUID()
+        }
+        
+        for index in 0 ..< self.events.count {
+            self.events[index].id = UUID()
+            
+            for eventIndex in 0 ..< self.events[index].events.count{
+                self.events[index].events[eventIndex].id = UUID()
+            }
+        }
+        
+        for index in 0 ..< self.expenses.count{
+            self.expenses[index].id = UUID()
+            
+            for expenseIndex in 0 ..< self.expenses[index].expensesPerDay.count{
+                self.expenses[index].expensesPerDay[expenseIndex].id = UUID()
+            }
+        }
+        
+        for index in 0 ..< self.checklist.count{
+            self.checklist[index].id = UUID()
+            
+            for checklistIndex in 0 ..< self.checklist[index].checklists.count{
+                self.checklist[index].checklists[checklistIndex].id = UUID()
+            }
+        }
+    }
+    
+
+}
+
+struct SavedPlace: Hashable , Identifiable, Codable{
+    
+    var id = UUID()
+    var title: String
+    var icon: String
+    var color: Int
+    var places: [Location] = []
+}
+
+struct Event: Hashable, Identifiable, Codable {
+    
+    var id = UUID()
+    var type: Int
+    var startDay: Int
+    var endDay: Int
+    var startTime: Date
+    var endTime: Date
+    var location: Location
+    var destination: Location?
+    var expense: Double?
+}
+
+struct EventPerDay: Hashable, Identifiable, Codable {
+    var id = UUID()
+    var day: Int
+    var events: [Event] = []
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case day
+    }
+}
+
+struct Expense: Hashable, Identifiable, Codable {
     var id = UUID()
     var catogery: Int
     var title: String
@@ -194,10 +266,34 @@ struct Expense: Hashable, Identifiable {
     var date: Date?
 }
 
-
-struct Checklist: Hashable, Identifiable {
-    
+struct ExpensePerDay: Hashable, Identifiable, Codable {
     var id = UUID()
-    var title: String
-    var completed: Bool = false
+    var day: Int
+    var expensesPerDay: [Expense] = []
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case day
+    }
+}
+
+struct Checklist: Hashable, Identifiable, Codable {
+
+    var id = UUID()
+    var title: String?
+    var completed: Bool? = false
+    var catagoryID: String?
+}
+
+struct ChecklistCateogry: Hashable, Identifiable, Codable {
+    var id = UUID()
+    var category_name: String
+    var checklists: [Checklist] = []
+    var dateCreated: Date = .now
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case category_name
+        case dateCreated
+    }
 }

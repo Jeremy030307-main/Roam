@@ -7,6 +7,13 @@
 
 import Foundation
 
+enum FetchingState{
+    
+    case noSearch
+    case enterSearch(fromMainPage: Bool)  // 0 means it come from main page, 1 means it come from search result page
+    case completesSearching
+}
+
 struct APISerivce {
     
     func fetch<T: Decodable>(_ type: T.Type, url: URL?, apiKey: String?, completion: @escaping(Result<T,APIError>) -> Void) async{

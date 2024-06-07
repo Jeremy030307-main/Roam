@@ -9,10 +9,11 @@ import SwiftUI
 
 struct TripPage: View {
     
-    @ObservedObject var userManager = UserManager(user: user10)
+    @EnvironmentObject var userManager: UserManager
     @State var navigateToDetail = false
     @State var tripChosen: Trip?
     @State var addNewTrip = false
+    @State var tripIndexChosen = 0
     
     @Binding var enterPerDayView: Bool
     
@@ -21,36 +22,32 @@ struct TripPage: View {
         NavigationStack {
             
             List{
-                
-                ForEach(userManager.user.itinerary){ itinerary in
-                    Button{
-                        tripChosen = itinerary
-                        navigateToDetail.toggle()
-                    } label: {
-                        SideImageCard(image: Image(itinerary.image), backgroundColor: Color(.secondarySystemBackground)) {
-                            VStack(alignment: .leading) {
-                                Text(itinerary.title).font(.headline)
-                                Text(itinerary.destination).font(.subheadline)
-                                
-                                HStack {
-                                    Spacer()
-                                    if itinerary.startDate == nil {
-                                        Text("\(itinerary.totalDays)d").font(.footnote)
-                                    }
-                                    else{
-                                        Text(itinerary.startDate!.formatted(.dateTime.day().month()) + " - " + itinerary.endDate!.formatted(.dateTime.day().month())).font(.footnote)
-                                    }
+                ForEach(Array(userManager.user.trips.enumerated()), id: \.1.id) {index, itinerary in
+                    SideImageCard(image: itinerary.image ?? "", backgroundColor: Color(.secondarySystemBackground), textHeight: 100) {
+                        VStack(alignment: .leading) {
+                            Text(itinerary.title ?? "").font(.headline)
+                            Text(itinerary.destination ?? "").font(.subheadline)
+                            
+                            HStack {
+                                Spacer()
+                                if itinerary.startDate == nil {
+                                    Text("\(itinerary.totalDays ?? 0)d").font(.footnote)
                                 }
-                                .padding(.horizontal)
-                                .frame(maxWidth: .infinity)
+                                else{
+                                    Text(itinerary.startDate!.formatted(.dateTime.day().month()) + " - " + itinerary.endDate!.formatted(.dateTime.day().month())).font(.footnote)
+                                }
                             }
+                            .padding(.horizontal)
                             .frame(maxWidth: .infinity)
-                            .padding()
                         }
-                        .cornerRadius(20)
-                        .shadow(radius: 2, y:3)
+                        .frame(maxWidth: .infinity)
+                        .padding()
                     }
-                    .foregroundStyle(.black)
+                    .cornerRadius(20)
+                    .shadow(radius: 2, y:3)
+                    .background {
+                        NavigationLink("", destination: TripMainView(trip: itinerary, editable: true))
+                    }
                 }
                 .onDelete(perform: userManager.deleteTrip)
                 .listRowSeparator(.hidden)
@@ -59,15 +56,12 @@ struct TripPage: View {
                 }
             }
             .listStyle(.plain)
-            .navigationDestination(isPresented: $navigateToDetail) {
-                TripMainView(trip: tripChosen ?? itinerary1)
-            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Text("Trip").font(.title).bold()
                 }
                 
-                ToolbarItemGroup(placement: .bottomBar) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
                     Spacer()
                     Button{
                         addNewTrip.toggle()
@@ -78,7 +72,7 @@ struct TripPage: View {
                 }
             }
             .sheet(isPresented: $addNewTrip) {
-                AddNewTripView(userManager: userManager)
+                AddNewTripView()
             }
         }
     }
@@ -86,4 +80,5 @@ struct TripPage: View {
 
 #Preview {
     TripPage(enterPerDayView: .constant(false))
+        .environmentObject(UserManager(user: FirebaseController.shared.user))
 }

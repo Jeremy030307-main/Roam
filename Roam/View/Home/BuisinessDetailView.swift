@@ -125,7 +125,6 @@ struct BuisinessDetailView: View {
                         .padding(.leading, 30)
                         
                         Divider()
-                        
                         Text("Review (\(locationData.reviewCount ?? 0))").font(.headline)
                         ForEach(reviews, id: \.self){review in
                             BuisinessReviewView(review: review)

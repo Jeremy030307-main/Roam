@@ -8,15 +8,9 @@
 import Foundation
 import SwiftUI
 
-enum FetchingState{
-    
-    case noSearch
-    case enterSearch(fromMainPage: Bool)  // 0 means it come from main page, 1 means it come from search result page
-    case completesSearching
-}
-
 @MainActor
 class YelpFetcher: ObservableObject {
+    let QUERY_LIMIT = 20
     
     @Published var searchText: String = ""
     @Published var locations = [LocationData]()
@@ -36,16 +30,51 @@ class YelpFetcher: ObservableObject {
         searchURLComponents.host = "api.yelp.com"
     }
     
-    func fetchAllLocation(categories: String?) async {
+    func fetchBeuisinessByLocation(categories: String?, requestIndex: Int = 0) async {
         
-        locations.removeAll()
-        isLoading  = true
+        if requestIndex == 0 {
+            locations.removeAll()
+            isLoading  = true
+        }
         
         searchURLComponents.path = "/v3/businesses/search"
         searchURLComponents.queryItems = [
             URLQueryItem(name: "term", value: ""),
             URLQueryItem(name: "location", value: searchText),
-            URLQueryItem(name: "categories", value: categories ?? "")
+            URLQueryItem(name: "categories", value: "bar"),
+            URLQueryItem(name: "limit", value: "\(QUERY_LIMIT)"),
+            URLQueryItem(name: "offset", value: "\(requestIndex * QUERY_LIMIT)"),
+        ]
+        
+        await service.fetch(VolumeData.self, url: searchURLComponents.url, apiKey: apiKey) { result in
+            
+            switch result {
+            case .failure(let error):
+                self.errorMessage = error.localizedDescription
+                print(error)
+            case .success(let volumeData):
+                if let location = volumeData.businesses {
+                    self.locations.append(contentsOf: location)
+                    self.isLoading = false
+                }
+            }
+        }
+    }
+    
+    func fetchBeuisinessByName(location: String, requestIndex: Int = 0) async {
+        
+        if requestIndex == 0 {
+            locations.removeAll()
+            isLoading  = true
+        }
+        
+        searchURLComponents.path = "/v3/businesses/search"
+        searchURLComponents.queryItems = [
+            URLQueryItem(name: "term", value: searchText),
+            URLQueryItem(name: "location", value: location),
+            URLQueryItem(name: "categories", value: ""),
+            URLQueryItem(name: "limit", value: "\(QUERY_LIMIT)"),
+            URLQueryItem(name: "offset", value: "\(requestIndex * QUERY_LIMIT)"),
         ]
         
         await service.fetch(VolumeData.self, url: searchURLComponents.url, apiKey: apiKey) { result in
@@ -80,10 +109,11 @@ class YelpFetcher: ObservableObject {
                 self.isLoading = false
             }
         }
+        
+        await fetchLocationReview(id: id)
     }
     
     func fetchLocationReview(id: String) async {
-         
         isLoading  = true
         let url = URL(string: "https://api.yelp.com/v3/businesses/\(id)/reviews")
         

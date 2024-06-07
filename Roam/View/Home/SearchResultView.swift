@@ -9,9 +9,13 @@ import SwiftUI
 
 struct SearchResultView: View {
     
+    @EnvironmentObject var userManager: UserManager
     @ObservedObject var yelpFetcher: YelpFetcher
     @Binding var searchText: String
     var searchBarAnimation: Namespace.ID
+    
+    @State private var requestIndex = 1
+    @State var scrollPosition: Int?
     
     var body: some View {
         VStack{
@@ -33,24 +37,46 @@ struct SearchResultView: View {
                     }
             }
         }
-        .padding()
+        .padding(.horizontal)
         
         if yelpFetcher.isLoading{
-            ProgressView()
-        }
-        List{
-            ForEach(yelpFetcher.locations, id: \.self) { location in
-                SearchResultCard(locationData: location)
+            VStack{
+                Spacer()
+                ProgressView()
+                    .padding()
+                Spacer()
             }
-            .listRowSeparator(.hidden)
         }
-        .listStyle(.plain)
+        ScrollView{
+            LazyVStack{
+                ForEach(Array(yelpFetcher.locations.enumerated()), id: \.1.id) { index, location in
+                    SearchResultCard(locationData: location)
+                        .id(index)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollPosition(id: $scrollPosition)
+        .padding()
+        .padding(.top,0)
+        .ignoresSafeArea()
         
         .onAppear {
             Task{
-                await yelpFetcher.fetchAllLocation(categories:"")
+                await yelpFetcher.fetchBeuisinessByLocation(categories:"")
             }
         }
+        .onChange(of: scrollPosition, { oldValue, newValue in
+            Task{
+                if newValue ?? 0 >= yelpFetcher.locations.count - 10{
+                    if yelpFetcher.locations.count == requestIndex * yelpFetcher.QUERY_LIMIT &&
+                        requestIndex * yelpFetcher.QUERY_LIMIT <= 1000{
+                        await yelpFetcher.fetchBeuisinessByLocation(categories: "", requestIndex: requestIndex)
+                        requestIndex += 1
+                    }
+                }
+            }
+        })
     }
 }
 
@@ -59,5 +85,7 @@ struct SearchResultView_Previews: PreviewProvider {
 
     static var previews: some View {
         SearchResultView(yelpFetcher: YelpFetcher(), searchText: .constant(""), searchBarAnimation: namespace)
+            .environmentObject(UserManager(user: FirebaseController.shared.user))
+
     }
 }

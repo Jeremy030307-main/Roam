@@ -9,7 +9,10 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
-
+    
+    @EnvironmentObject var authViewModel: AuthenticationVM
+    @EnvironmentObject var firebaseController: FirebaseController
+    @StateObject var userManager = UserManager(user: FirebaseController.shared.user)
     @State var enterPerDayView = false
     
     var body: some View {
@@ -25,21 +28,19 @@ struct ContentView: View {
                 }
                 .toolbarBackground(enterPerDayView==true ? .visible: .automatic, for: .tabBar)
             
-            
-            NotificationPage()
-                .tabItem {
-                    Label("Notification", systemImage: "bell.fill")
-                }
-            
             ProfilePage()
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
                 }
         }
+        .environmentObject(UserManager(user: firebaseController.user))
     }
        
 }
 
 #Preview {
     ContentView()
+        .environmentObject(AuthenticationVM())
+        .environmentObject(FirebaseController.shared)
+
 }

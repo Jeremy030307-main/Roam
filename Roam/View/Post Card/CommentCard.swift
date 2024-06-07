@@ -9,19 +9,19 @@ import SwiftUI
 
 struct CommentCard: View {
     
-    @State var comment: Comment
-
+    var comment: Comment
+    var parentPost: (any Postable)?
     
     var body: some View {
         
         BlankCard(cardColor: Color(.white)) {
-            ProfileHeader(image: Image(comment.user.image), username: comment.user.username)
+            ProfileHeader(image: Image(comment.authorImage), username: comment.authorName )
                         
             Text(comment.content)
                 .font(.caption)
             
             HStack(spacing: 20){
-                PostVoteView(voteItem: comment)
+                PostVoteView(voteItem: comment, parentPost: parentPost)
             }
             .padding(.top, 2)
         }

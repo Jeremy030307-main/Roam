@@ -44,7 +44,7 @@ struct PostDetailView<Content: View> : View {
                     Text("Comment").font(.headline)
                     
                     ForEach(postManager.post.comments.reversed()){ comment in
-                        CommentCard(comment: comment)
+                        CommentCard(comment: comment, parentPost: postManager.post)
                     }
                     
                     Spacer()

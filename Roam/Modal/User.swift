@@ -8,18 +8,18 @@
 import Foundation
 import SwiftUI
 
-struct User: Identifiable, Hashable {
+struct User: Identifiable, Hashable, Codable{
     
     var id: String?
-    var name: String
-    var username: String
-    var email: String
-    var password: String
-    var image: String = "profilePiicture"
+    var name: String?
+    var username: String?
+    var email: String?
+    var password: String?
+    var image: String?
     
     var posts: [Post] = []
     var guides: [Guide] = []
     var followers: [User] = []
     var following: [User] = []
-    var itinerary: [Trip] = []
+    var trips: [Trip] = []
 }

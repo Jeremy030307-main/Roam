@@ -9,11 +9,13 @@ import SwiftUI
 
 struct SearchResultCard: View {
     
+    @EnvironmentObject var userManager: UserManager
     @ObservedObject var yelpFetcher = YelpFetcher()
     var locationData: LocationData
     @State var locationDetail: LocationDetail?
     @State var locationReviews: [LocationReview]?
     @State var showDetail = false
+    @State var addingEvent = false
     
     var body: some View {
         
@@ -22,7 +24,6 @@ struct SearchResultCard: View {
             Button{
                 Task{
                     await yelpFetcher.fetchLocationDetail(id:locationData.id ?? "")
-                    await yelpFetcher.fetchLocationReview(id: locationData.id ?? "")
                     locationDetail = yelpFetcher.locationDetail
                     locationReviews = yelpFetcher.reviews
                 }
@@ -52,7 +53,16 @@ struct SearchResultCard: View {
                         .cornerRadius(10)
                         
                         VStack(alignment: .leading){
-                            Text(locationData.name ?? "").font(.headline)
+                            HStack{
+                                Text(locationData.name ?? "").font(.headline)
+                                Spacer()
+                                Button{
+                                    addingEvent.toggle()
+                                }label: {
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundStyle(.accent)
+                                }
+                            }
                             HStack{
                                 RatingStarView(rating: locationData.rating ?? 0)
                                     .frame(width: targetSize.width/4.5)
@@ -89,6 +99,9 @@ struct SearchResultCard: View {
                 BuisinessDetailView(locationData: locationData, detail: locationDetail!, reviews: locationReviews!)
             }
         })
+        .sheet(isPresented: $addingEvent){
+            AddLocationToTripView(addingEvent: $addingEvent, locationData: locationData)
+        }
     }
     
     func convertHTTP() -> String? {
@@ -111,4 +124,6 @@ struct SearchResultCard: View {
                                                 latitude: 37.7983818054199,
                                                 longitude: -122.407821655273,
                                                 address: "373 Columbus Ave, San Francisco, 94133 CA, US"))
+    .environmentObject(UserManager(user: FirebaseController.shared.user))
+
 }

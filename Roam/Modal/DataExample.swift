@@ -35,10 +35,10 @@ let expense1 = Expense(catogery: ExpenseCategory.food.rawValue, title: "Tiramisu
 
 let checklist1 = Checklist(title: "Puffer acket", completed: false)
 //Saved Places List example
-let list1 = SavedPlace(title: "Cafés", icon: "cup.and.saucer.fill", color: SavedPlaceColor.brown.rawValue)
-let list2 = SavedPlace(title: "Brunch Spot", icon: "fork.knife", color: SavedPlaceColor.orange.rawValue)
-let list3 = SavedPlace(title: "Jogging Park", icon: "figure.walk", color: SavedPlaceColor.green.rawValue)
-let list4 = SavedPlace(title: "Hotel", icon: "bed.double", color: SavedPlaceColor.cyan.rawValue)
+let list1 = SavedPlace(title: "Cafés", icon: SavePlaceIcon.food.rawValue, color: SavedPlaceColor.brown.rawValue, places: [location1, location2])
+let list2 = SavedPlace(title: "Brunch Spot", icon: SavePlaceIcon.food.rawValue, color: SavedPlaceColor.orange.rawValue)
+let list3 = SavedPlace(title: "Jogging Park", icon: SavePlaceIcon.walk.rawValue, color: SavedPlaceColor.green.rawValue)
+let list4 = SavedPlace(title: "Hotel", icon: SavePlaceIcon.bed.rawValue, color: SavedPlaceColor.cyan.rawValue)
 
 // Event Object example
 let formatter1: DateFormatter = {
@@ -99,11 +99,25 @@ let itinerary2 = Trip(image: "Sydney",
                            startDate: formatter.date(from: "2024/03/07") ?? .now,
                            endDate: formatter.date(from: "2024/03/15") ?? .now,
                            totalDays: 9,
-                      events: [1: [event1, event2, event4],
-                             2: [event4],
-                             3: [event2]],
-                      expenses: [1: [expense1]],
-                      checklist: [checklist1]
+                      events: [EventPerDay(day: 1, events: [event1, event2, event4]),
+                               EventPerDay(day: 2, events: [event4]),
+                               EventPerDay(day: 3, events: [event2]),
+                               EventPerDay(day: 4, events: []),
+                               EventPerDay(day: 5, events: []),
+                               EventPerDay(day: 6, events: []),
+                               EventPerDay(day: 7, events: []),
+                               EventPerDay(day: 8, events: []),
+                               EventPerDay(day: 9, events: [])],
+                      expenses: [ExpensePerDay(day: 1, expensesPerDay: [expense1]),
+                                 ExpensePerDay(day: 2, expensesPerDay: []),
+                                 ExpensePerDay(day: 3, expensesPerDay: []),
+                                 ExpensePerDay(day: 4, expensesPerDay: []),
+                                 ExpensePerDay(day: 5, expensesPerDay: []),
+                                 ExpensePerDay(day: 6, expensesPerDay: []),
+                                 ExpensePerDay(day: 7, expensesPerDay: []),
+                                 ExpensePerDay(day: 8, expensesPerDay: []),
+                                 ExpensePerDay(day: 9, expensesPerDay: [])],
+                      checklist: [ChecklistCateogry(category_name: "Daily", checklists: [checklist1])]
                            )
 
 let itinerary3 = Trip(image: "Peninsula",
@@ -137,18 +151,21 @@ let itinerary6 = Trip(image: "PhillipIsland",
                            )
 
 /* Post 1: Normal Text Post */
-var post1 = Post(author: user1,
-                 title: "Budget Attraction to Sydney",
+var post1 = Post(authorID: user1.id ?? "",
+                 authorName: user1.name ?? "", authorImage: "", title: "Budget Attraction to Sydney",
                  content: "I'm planning a one-week trip to Sydney, and I've heard that the living costs there are quite expensive. I want this trip to be on a budget, as I'm mindful of my expenses. Can anyone suggest some affordable accommodation options or tips for saving money on meals and transportation while still enjoying the best of what Sydney has to offer? Any insider tips on free or low-cost activities and attractions would also be greatly appreciated!")
 
 let post1Comment = [
-    Comment(user: user2, post: post1, content:
+    Comment(authorID: user2.id ?? "",
+            authorName: user2.name ?? "", authorImage: "", content:
     "Hey there! I totally understand your concern about expenses in Sydney. One budget-friendly accommodation option I'd recommend is checking out hostels in the city center or nearby suburbs. They often offer affordable dormitory-style rooms and sometimes even private rooms at a fraction of hotel prices. As for dining, exploring local markets like Paddy's Markets or Chinatown can be a great way to sample delicious food without spending too much. And don't miss out on free activities like walking tours of the city or visiting the beautiful beaches like Bondi and Manly. Enjoy your trip!"),
     
-    Comment(user: user3, post: post1, content:
+    Comment(authorID: user3.id ?? "",
+            authorName: user3.name ?? "", authorImage: "", content:
     "Hi! Sydney can definitely be pricey, but there are plenty of ways to enjoy the city without breaking the bank. One tip for affordable accommodation is to look into Airbnb options, especially if you're traveling with friends or family and can split the cost. Many hosts offer budget-friendly rooms or entire apartments at competitive prices. When it comes to dining, consider grabbing meals from food trucks or local takeaway joints for tasty yet inexpensive eats. And don't forget to take advantage of free attractions like hiking in the Royal Botanic Garden or exploring the vibrant street art scene in Newtown. Have a fantastic trip!")]
 
-var guide1 = Guide(author: user2 ,itinerary: itinerary1)
+var guide1 = Guide(authorID: user2.id ?? "",
+                   authorName: user2.name ?? "", authorImage: "",itinerary: itinerary1)
 
 var user10 = User(name: "Mark Stank",
                   username: "mark_stank_03",
@@ -158,5 +175,5 @@ var user10 = User(name: "Mark Stank",
                   guides: [guide1],
                   followers: [user1, user2, user3],
                   following: [user4, user5, user6],
-                  itinerary: [itinerary2, itinerary3, itinerary4, itinerary5, itinerary6]
+                  trips: [itinerary1, itinerary2, itinerary3, itinerary4, itinerary5, itinerary6]
 )

@@ -10,13 +10,17 @@ import SwiftUI
 struct PostVoteView: View {
      
     @ObservedObject var voteManager: VoteManager
+    var parentPost: (any Postable)?
 
+    init(voteItem: any Votable, parentPost: (any Postable)?) {
+        self.voteManager = VoteManager(voteItem: voteItem, parentPost: parentPost)
+    }
+    
     init(voteItem: any Votable) {
-        self.voteManager = VoteManager(voteItem: voteItem)
+        self.voteManager = VoteManager(voteItem: voteItem, parentPost: nil)
     }
     
     var body: some View {
-        
         HStack {
             Button(action: self.voteManager.upvote) {
                 Image(systemName: voteManager.isUpvote() ? "arrowshape.up.fill":"arrowshape.up")
@@ -54,8 +58,8 @@ struct TextPostView: View {
     
     var body: some View {
     
-        ProfileHeader(image: Image(postManager.textPost!.author.image), username: postManager.textPost!.author.username)
-        
+        ProfileHeader(image: Image(postManager.textPost!.authorImage ), username: postManager.textPost!.authorName )
+            
         Text(postManager.textPost!.title).padding(.top, 8)
         
         Text(postManager.textPost!.content)
@@ -73,54 +77,63 @@ struct TextPostView: View {
 struct ItineraryPostView: View {
     
     @ObservedObject var postManager: PostManager
+    @State var showDetail = false
     
     init(postManager: PostManager) {
         self.postManager = postManager
     }
     
     var body: some View {
-    
-        SideImageCard(image: Image(postManager.itineraryPost!.itinerary.image), backgroundColor: Color(.white)) {
+        
+        Button{
+            showDetail.toggle()
+        } label: {
             
-            VStack(alignment: .leading) {
-                Text(postManager.itineraryPost!.itinerary.title).font(.headline).lineLimit(1)
-                Text(postManager.itineraryPost!.itinerary.destination).font(.subheadline)
+            SideImageCard(image: postManager.itineraryPost!.itinerary?.image ?? "", backgroundColor: Color(.white), textHeight: 80) {
                 
-                HStack(spacing: 15){
-                    if postManager.itineraryPost!.itinerary.pax != nil {
-                        HStack{
-                            Image(systemName: "person.fill").foregroundStyle(.accent)
-                            Text("\(postManager.itineraryPost!.itinerary.pax ?? 0 )").font(.footnote)
-                        }
-                    }
-
-                    HStack{
-                        Image(systemName: "calendar").foregroundStyle(.accent)
-                        Text("\(postManager.itineraryPost!.itinerary.totalDays)d").font(.footnote)
-                    }
+                VStack(alignment: .leading) {
+                    Text(postManager.itineraryPost!.itinerary?.title ?? "").font(.headline).lineLimit(1)
+                    Text(postManager.itineraryPost!.itinerary?.destination ?? "").font(.subheadline)
                     
-                    if postManager.itineraryPost!.itinerary.totalSpent != nil {
-                        HStack{
-                            Image(systemName: "dollarsign").foregroundStyle(.accent)
-                            Text("\(postManager.itineraryPost!.itinerary.totalSpent ?? 0)").font(.footnote)
+                    HStack(spacing: 15){
+                        if postManager.itineraryPost!.itinerary?.pax != nil {
+                            HStack{
+                                Image(systemName: "person.fill").foregroundStyle(.accent)
+                                Text("\(postManager.itineraryPost!.itinerary?.pax ?? 0 )").font(.footnote)
+                            }
                         }
-                    }
-                    
-                }.padding(.top,5)
+                        
+                        HStack{
+                            Image(systemName: "calendar").foregroundStyle(.accent)
+                            Text("\(postManager.itineraryPost!.itinerary?.totalDays ?? 0)d").font(.footnote)
+                        }
+                        
+                        if postManager.itineraryPost!.itinerary?.totalSpent != nil {
+                            HStack{
+                                Image(systemName: "dollarsign").foregroundStyle(.accent)
+                                Text("\(postManager.itineraryPost!.itinerary?.totalSpent ?? 0)").font(.footnote)
+                            }
+                        }
+                        
+                    }.padding(.top,5)
+                }
+                .padding(10)
+                
+                Spacer()
             }
-            .padding(10)
-            
-            Spacer()
-        }
+        }.foregroundStyle(.primary)
         
         HStack(spacing: 20){
-            ProfileHeader(image: Image(postManager.itineraryPost!.author.image), username: postManager.itineraryPost!.author.username)
+            ProfileHeader(image: Image(postManager.itineraryPost!.authorImage), username: postManager.itineraryPost!.authorName)
             
             Spacer()
             PostVoteView(voteItem: postManager.post)
             PostCommentView(postManager: postManager).padding(.trailing, 10)
         }
         .padding(.top, 2)
+        .fullScreenCover(isPresented: $showDetail){
+            TripMainView(trip: postManager.itineraryPost!.itinerary!, editable: false)
+        }
     }
 }
 
@@ -157,6 +170,12 @@ struct PostCard: View {
             else if postManager.itineraryPost != nil {
                 PostDetailView(postManager: postManager){
                     ItineraryPostView(postManager: postManager)
+                    Button{
+                        
+                    } label: {
+                        Text("Copy Trip").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
             }
         }

@@ -11,7 +11,7 @@ struct SearchingView: View {
     
     @Environment(\.dismiss) private var dismiss
 
-    @ObservedObject var locationService: CitySearchViewModal = CitySearchViewModal()
+    @ObservedObject var locationService = CitySearchViewModal()
     @ObservedObject var yelpFetcher: YelpFetcher
     var searchBarAnimation: Namespace.ID
     var fromMainPage: Bool
@@ -60,11 +60,12 @@ struct SearchingView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .foregroundStyle(.accent)
-                                .frame(height: 30)
+                                .frame(height: 20)
                                 .padding()
                                 .background(.quinary)
                                 .cornerRadius(15)
-                            Text(completionResult).font(.title3).bold().padding(.horizontal)
+                            Text(completionResult).font(.callout).bold().padding(.horizontal)
+                                .multilineTextAlignment(.leading)
                             Spacer()
                         }
                         .padding(.horizontal)

@@ -66,23 +66,6 @@ struct TripCirceleIcon: View {
     }
 }
 
-struct CircleScaleButton: ButtonStyle {
-    var color: Color = .blue
-    var maxHeight: CGFloat = 35
-    
-    public func makeBody(configuration: Self.Configuration) -> some View {
-        
-            configuration.label
-                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: maxHeight, alignment: .center)
-                .foregroundColor(.white)
-                .background(RoundedRectangle(cornerRadius: 35/2.0).fill(self.color))
-                .compositingGroup()
-                .clipShape(Circle())
-                .opacity(configuration.isPressed ? 0.8 : 1.0)
-                .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
-    }
-}
-
 #Preview {
     TripCirceleIcon(image: Image(systemName: EventType.accomodation.icon), color: Color(.purple), dimension: 30)
         .previewLayout(.sizeThatFits)

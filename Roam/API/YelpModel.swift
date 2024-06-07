@@ -140,6 +140,16 @@ struct LocationData: Codable, Hashable {
         self.longitude = longitude
         self.address = address
     }
+    
+    init(location: Location){
+        self.id = location.id
+        self.name = location.name
+        self.rating = location.rating
+        self.price = location.price
+        self.phone = location.phone
+        self.imageURL = location.image
+        self.address = location.address
+    }
 }
 
 struct LocationDetail: Codable, Hashable {

@@ -8,13 +8,15 @@
 import SwiftUI
 
 struct AddEventView: View {
-    
+
     @ObservedObject var tripManager: TripManager
     @Binding var addingEvent: Bool
+    @Binding var previousView: Bool
     @State var selectedCategory = false
     @State var didError = false
     
     @Namespace var enterCatogeoryFormAnimation
+    var location: Location?
     
     var body: some View {
         NavigationStack{
@@ -22,27 +24,31 @@ struct AddEventView: View {
             Form{
             switch selectedCategory {
             case true:
-                AddEventForm(tripManager: tripManager, animation: enterCatogeoryFormAnimation)
+                AddEventForm(tripManager: tripManager, animation: enterCatogeoryFormAnimation, defaultLocation: location)
             case false:
                     Section("Add New Event"){
                         ForEach(EventType.allCases) {type in
-                            Button{
-                                withAnimation(.easeInOut) {
-                                    tripManager.newEventType = type
-                                    selectedCategory.toggle()
+                            if location != nil && (type == .flight || type == .transportation || type == .carRental){
+                                
+                            } else {
+                                Button{
+                                    withAnimation(.easeInOut) {
+                                        tripManager.newEventType = type
+                                        selectedCategory.toggle()
+                                    }
+                                }label: {
+                                    HStack{
+                                        TripCirceleIcon(image: Image(systemName: type.icon), color: Color.accentColor, dimension: 30)
+                                            .frame(width: 30)
+                                            .matchedGeometryEffect(id: type.icon, in: enterCatogeoryFormAnimation, isSource: true)
+                                        
+                                        Text(type.name).padding(.horizontal, 10)
+                                            .matchedGeometryEffect(id: type.name, in: enterCatogeoryFormAnimation,isSource: true)
+                                    }
+                                    .padding(4)
                                 }
-                            }label: {
-                                HStack{
-                                    TripCirceleIcon(image: Image(systemName: type.icon), color: Color.accentColor, dimension: 30)
-                                        .frame(width: 30)
-                                        .matchedGeometryEffect(id: type.icon, in: enterCatogeoryFormAnimation, isSource: true)
-                                    
-                                    Text(type.name).padding(.horizontal, 10)
-                                        .matchedGeometryEffect(id: type.name, in: enterCatogeoryFormAnimation,isSource: true)
-                                }
-                                .padding(4)
+                                .foregroundStyle(.primary)
                             }
-                            .foregroundStyle(.primary)
                         }
                     }
                     .headerProminence(.increased)
@@ -51,9 +57,15 @@ struct AddEventView: View {
             .toolbar{
                 ToolbarItem(placement: .topBarLeading) {
                     if selectedCategory == true{
-                        Button("Cancel"){
+                        Button("Back"){
                             withAnimation {
                                 selectedCategory.toggle()
+                            }
+                        }
+                    } else if previousView == true {
+                        Button("Back"){
+                            withAnimation{
+                                previousView.toggle()
                             }
                         }
                     }
@@ -67,7 +79,7 @@ struct AddEventView: View {
                         }
                     case true:
                         Button("Save"){
-                            let result = tripManager.saveEvent()
+                            let result = tripManager.saveEvent(defaultLocation: location)
                             if result == true{
                                 addingEvent.toggle()
                             } else {
@@ -92,11 +104,11 @@ struct AddEventForm: View {
     @ObservedObject var tripManager: TripManager
     
     var animation: Namespace.ID
-
+    var defaultLocation: Location?
+    
     var body: some View {
-//        Form{
             Section{
-                Text(tripManager.trip.title).foregroundStyle(.secondary)
+                Text(tripManager.trip.title ?? "").foregroundStyle(.secondary)
             } header: {
                 VStack(alignment:.leading){
                     HStack{
@@ -114,27 +126,21 @@ struct AddEventForm: View {
                         
         switch tripManager.newEventType {
         case .activity:
-            Section("Name"){
-                TextField("e.g., Morning Jog", text: $tripManager.newEventName)
-            }
             AddEventDuration(tripManager: tripManager, startTimePrompt: "Start", endTimePrompt: "End")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Location", prompt: "e.g., Library, Musuem")
+            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Location", prompt: "e.g., Library, Musuem", defaultLocation: defaultLocation)
         case .flight:
             AddEventDuration(tripManager: tripManager, startTimePrompt: "Depature", endTimePrompt: "Arrival")
             AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Depature Location", prompt: "e.g., Train Station, Bus Station")
             AddEventLocationSearch(tripManager: tripManager, locationType: .arrival, sectionName: "Arrival Location", prompt: "e.g., Train Station, Bus Station")
         case .accomodation:
             AddEventDuration(tripManager: tripManager, startTimePrompt: "Check In", endTimePrompt: "Check Out")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Accomodation Name", prompt: "e.g., Hyatt, Shangri-La")
+            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Accomodation Name", prompt: "e.g., Hyatt, Shangri-La", defaultLocation: defaultLocation)
         case .restaurant:
             AddEventDuration(tripManager: tripManager, startTimePrompt: "Start", endTimePrompt: "End")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Restaurant Name", prompt: "e.g., Italian, Starbucks")
+            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Restaurant Name", prompt: "e.g., Italian, Starbucks", defaultLocation: defaultLocation)
         case .tour:
-            Section("Tour Name"){
-                TextField("e.g., Heli Tour, City One Day Trip", text: $tripManager.newEventName)
-            }
             AddEventDuration(tripManager: tripManager, startTimePrompt: "Start", endTimePrompt: "End")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Location", prompt: "e.g., Mountain, Train Station")
+            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Location", prompt: "e.g., Mountain, Train Station", defaultLocation: defaultLocation)
         case .transportation:
             AddEventDuration(tripManager: tripManager, startTimePrompt: "Depature", endTimePrompt: "Arrival")
             AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Depature Location", prompt: "e.g., Train Station, Bus Station")
@@ -145,7 +151,6 @@ struct AddEventForm: View {
 
             AddEventLocationSearch(tripManager: tripManager, locationType: .arrival, sectionName: "Drop Off Location", prompt: "e.g., Train Station, Bus Station")
         }
-//        }
     }
 }
 
@@ -159,84 +164,52 @@ struct AddEventLocationSearch: View {
 
     @State var searchLocation = false
     var locationType: LocationType
-    
     var sectionName: String
     var prompt: String
+    var defaultLocation: Location?
     
     var body: some View{
         
         Section{
-            VStack{
-                if locationType == .location{
-                    Text(tripManager.newEventLocation?.name==nil ? "Tap to Search":tripManager.newEventLocation?.name ?? "").foregroundStyle(tripManager.newEventLocation?.name==nil ? .tertiary: .primary)
-                } else {
-                    Text(tripManager.newEventDestination?.name==nil ? "Tap to Search":tripManager.newEventDestination?.name ?? "").foregroundStyle(tripManager.newEventDestination?.name==nil ? .tertiary: .primary)
+            if let location = defaultLocation{
+                VStack{
+                    Text(location.name ?? "")
                 }
-            }
-            .onTapGesture {
-                withAnimation(.easeInOut) {
-                    searchLocation.toggle()
+            } else {
+                VStack{
+                    if locationType == .location{
+                        Text(tripManager.newEventLocation?.name==nil ? "Tap to Search":tripManager.newEventLocation?.name ?? "").foregroundStyle(tripManager.newEventLocation?.name==nil ? .tertiary: .primary)
+                    } else {
+                        Text(tripManager.newEventDestination?.name==nil ? "Tap to Search":tripManager.newEventDestination?.name ?? "").foregroundStyle(tripManager.newEventDestination?.name==nil ? .tertiary: .primary)
+                    }
+                }
+                .onTapGesture {
+                    withAnimation(.easeInOut) {
+                        searchLocation.toggle()
+                    }
                 }
             }
 
         } header: {
             Text(sectionName)
         } footer: {
-            if locationType == .location{
-                Text(tripManager.newEventLocation?.address ?? "")
+            if let location = defaultLocation{
+                Text(location.address ?? "")
             } else {
-                Text(tripManager.newEventDestination?.address ?? "")
+                if locationType == .location{
+                    Text(tripManager.newEventLocation?.address ?? "")
+                } else {
+                    Text(tripManager.newEventDestination?.address ?? "")
+                }
             }
         }
         
         .sheet(isPresented: $searchLocation){
-            EventSearchLocationView(tripManager: tripManager, prompt: prompt, locationType: locationType)
-        }
-    }
-    
-    struct EventSearchLocationView: View {
-        
-        @Environment(\.dismiss) private var dismiss
-        @ObservedObject var yelpFetcher = YelpFetcher()
-        @ObservedObject var tripManager: TripManager
-        @FocusState var isFocus: Bool
-        var prompt: String
-        var locationType: LocationType
-
-        
-        var body: some View{
-            
-            Form{
-                Section("Location"){
-                    TextField(prompt, text: $yelpFetcher.searchText)
-                        .focused($isFocus)
-                        .onSubmit {
-                            Task{
-                                await yelpFetcher.fetchAllLocation(categories:"")
-                            }
-                        }
-                }
-
-                ForEach(yelpFetcher.locations, id: \.self){ location in
-                    Button {
-                        switch locationType {
-                        case .location:
-                            tripManager.newEventLocation = location
-                        case .arrival:
-                            tripManager.newEventDestination = location
-                        }
-                        yelpFetcher.searchText = ""
-                        dismiss()
-                    } label: {
-                        VStack(alignment: .leading){
-                            Text(location.name ?? "").font(.headline)
-                            Text(location.address ?? "").font(.subheadline)
-                        }
-                    }
-                }
-            }
-            .onAppear{
-                isFocus = true
+            switch locationType {
+            case .location:
+                SearchLocationSheet(tripManager: tripManager, location: $tripManager.newEventLocation, prompt: prompt)
+            case .arrival:
+                SearchLocationSheet(tripManager: tripManager, location: $tripManager.newEventDestination, prompt: prompt)
             }
         }
     }
@@ -252,23 +225,34 @@ struct AddEventDuration: View{
         
         if tripManager.trip.startDate == nil {
             Section(startTimePrompt){
-                Picker("Day", selection: $tripManager.newEventStartDay){
-                    ForEach(1..<tripManager.trip.totalDays){ day in
-                        Text("Day \(day)").tag(day)
+                HStack{
+                    Text("Start")
+                    Spacer()
+                    Picker("Day", selection: $tripManager.newEventStartDay){
+                        ForEach(1..<(tripManager.trip.totalDays ?? 0)){ day in
+                            Text("Day \(day)").tag(day)
+                        }
                     }
+                    .labelsHidden()
+                    DatePicker("Time", selection: $tripManager.newEventStartTime, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
                 }
-                DatePicker("Time", selection: $tripManager.newEventStartTime, displayedComponents: .hourAndMinute)
             }
             
             Section(endTimePrompt){
-                Picker("Day", selection: $tripManager.newEventStartDay){
-                    ForEach(1..<tripManager.trip.totalDays){ day in
-                        Text("Day \(day)").tag(day)
+                HStack{
+                    Text("End")
+                    Spacer()
+                    Picker("Day", selection: $tripManager.newEventEndDay){
+                        ForEach(1..<(tripManager.trip.totalDays ?? 0)){ day in
+                            Text("Day \(day)").tag(day)
+                        }
                     }
+                    .labelsHidden()
+                    DatePicker("Time", selection: $tripManager.newEventEndTime, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
                 }
-                DatePicker("Time", selection: $tripManager.newEventEndTime, displayedComponents: .hourAndMinute)
             }
-
         } else {
             Section("Period"){
                 DatePicker(startTimePrompt, 
@@ -278,12 +262,16 @@ struct AddEventDuration: View{
                            selection: $tripManager.newEventEndTime,
                            in: tripManager.getTripRange())
             }
+            .onAppear{
+                tripManager.newEventStartTime = Calendar.current.date(byAdding: .day, value: tripManager.selectedDay-1, to: tripManager.trip.startDate ?? .now) ?? .now
+                tripManager.newEventEndTime = Calendar.current.date(byAdding: .day, value: tripManager.selectedDay-1, to: tripManager.trip.startDate ?? .now) ?? .now
+            }
         }
     }
 }
 
 #Preview("Main View") {
-    AddEventView(tripManager: TripManager(trip: itinerary4), addingEvent: .constant(false))
+    AddEventView(tripManager: TripManager(trip: itinerary4), addingEvent: .constant(false), previousView: .constant(false))
 }
 
 struct AddEventForm1_Previews: PreviewProvider {
