@@ -220,8 +220,6 @@ struct Trip: Hashable , Identifiable, Codable{
             }
         }
     }
-    
-
 }
 
 struct SavedPlace: Hashable , Identifiable, Codable{

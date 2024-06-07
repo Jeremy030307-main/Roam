@@ -274,7 +274,7 @@ struct ExpenseDetailView: View {
                     .buttonStyle(.bordered)
                     .tint(.accent)
                     
-                    if let expense = expense{
+                    if expense != nil{
                         Button{
                             deleteExpense.toggle()
                         } label: {
@@ -288,10 +288,10 @@ struct ExpenseDetailView: View {
                     Button{
                         withAnimation {
                             isEditting.toggle()
-                            if let expense = expense{
+                            if expense != nil{
                                 tripManager.editExpense(expenseDay: expenseDay, expenseIndex: expenseIndex, expenseCaegory: expenseCategory, title: editingDescription, amount: Double(editingAmount) ?? 0, date: edittingDate, day: edittingDay)
                             }
-                            if let event = event {
+                            if event != nil {
                                 tripManager.updateEventExpense(eventDay: expenseDay, eventIndex: expenseIndex, amount: Double(editingAmount) ?? 0)
                             }
                         }

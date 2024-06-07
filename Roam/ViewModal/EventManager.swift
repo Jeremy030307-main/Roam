@@ -74,10 +74,8 @@ class EventManager: ObservableObject {
         let startMin = Calendar.current.dateComponents([.minute], from: event.startTime)
         let endHour = Calendar.current.dateComponents([.hour], from: event.endTime)
         let endMin = Calendar.current.dateComponents([.minute], from: event.endTime)
-        print(event.location.name, startHour, startMin, endHour, endMin)
         var minute: Int = 0
         if event.startDay == event.endDay {  // the event start and end at same day
-            let diffComponents = Calendar.current.dateComponents([.minute], from: event.startTime  , to: event.endTime)
             if let startHour = startHour.hour, let endHour = endHour.hour, let startMin = startMin.minute, let endMin = endMin.minute {
                 minute = (endHour*60 + endMin) - (startHour*60 + startMin)
             }
@@ -100,7 +98,6 @@ class EventManager: ObservableObject {
                 minute = (24*60)
             }
         }
-        print(minute, event.location.name)
         return CGFloat(Double(minute) * 1.5)
     }
     

@@ -87,18 +87,22 @@ class UserManager: ObservableObject {
     
     func addNewGuide(trip: Trip){
         
+        let tripCopy = Trip(trip: trip)
+        print(trip)
+        print("------------------------------")
+        print(tripCopy)
         let newGuide = Guide(authorID: user.id ?? "", authorName: user.name ?? "", authorImage: user.image ?? "", itinerary: trip)
         
         // creat a document to save post into Post collection
-        if let documentPath = firebaseController.addDocument(itemToAdd: newGuide, collectionPath: "Guide", documentPath: newGuide.id.uuidString){
-            
-            // add the trip document reference into the guide document
-            firebaseController.updateField(object: firebaseController.db.collection("Trip").document(trip.id.uuidString),
-                                           collectionPath: "Guide", documentPath: newGuide.id.uuidString, attributeName: "itinerary")
-            
-            // then stored its reference into user documet
-            firebaseController.addReferenceToArray(referenceToAdd: documentPath, collectionPath: "User", documentPath: firebaseController.currentUser?.uid ?? "", attributeName: "guides")
-        }
+//        if let documentPath = firebaseController.addDocument(itemToAdd: newGuide, collectionPath: "Guide", documentPath: newGuide.id.uuidString){
+//            
+//            // add the trip document reference into the guide document
+//            firebaseController.updateField(object: firebaseController.db.collection("Trip").document(trip.id.uuidString),
+//                                           collectionPath: "Guide", documentPath: newGuide.id.uuidString, attributeName: "itinerary")
+//            
+//            // then stored its reference into user documet
+//            firebaseController.addReferenceToArray(referenceToAdd: documentPath, collectionPath: "User", documentPath: firebaseController.currentUser?.uid ?? "", attributeName: "guides")
+//        }
     }
     
     

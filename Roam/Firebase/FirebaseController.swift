@@ -75,7 +75,7 @@ extension FirebaseController{
             }
             
             guard let userData = userSnapshot.data() else {
-                print("User document was empty \(error)")
+                print("User document was empty \(String(describing: error))")
                 return
             }
             print("userFetcher")
