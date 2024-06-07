@@ -26,7 +26,6 @@ struct TripMainView: View {
     var body: some View {
         
         NavigationStack{
-            Text("\(tripManager.trip.events.count)")
             VStack(alignment: .leading){
                 
                 // Header of trip main view

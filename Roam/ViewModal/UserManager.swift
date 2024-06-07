@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
 class UserManager: ObservableObject {
     
@@ -73,6 +74,11 @@ class UserManager: ObservableObject {
         }
     }
     
+    func addTripFromGuide(guideTrip: Trip, name: String){
+        
+        // first, we need to deep coopy the trip
+    }
+    
     func addNewPost(title: String, content: String){
         
         let newPost = Post(authorID: user.id ?? "", authorName: user.name ?? "", authorImage: user.image ?? "", title: title, content: content)
@@ -88,21 +94,21 @@ class UserManager: ObservableObject {
     func addNewGuide(trip: Trip){
         
         let tripCopy = Trip(trip: trip)
-        print(trip)
-        print("------------------------------")
-        print(tripCopy)
-        let newGuide = Guide(authorID: user.id ?? "", authorName: user.name ?? "", authorImage: user.image ?? "", itinerary: trip)
-        
-        // creat a document to save post into Post collection
-//        if let documentPath = firebaseController.addDocument(itemToAdd: newGuide, collectionPath: "Guide", documentPath: newGuide.id.uuidString){
-//            
-//            // add the trip document reference into the guide document
-//            firebaseController.updateField(object: firebaseController.db.collection("Trip").document(trip.id.uuidString),
-//                                           collectionPath: "Guide", documentPath: newGuide.id.uuidString, attributeName: "itinerary")
-//            
-//            // then stored its reference into user documet
-//            firebaseController.addReferenceToArray(referenceToAdd: documentPath, collectionPath: "User", documentPath: firebaseController.currentUser?.uid ?? "", attributeName: "guides")
-//        }
+        let newGuide = Guide(authorID: user.id ?? "", authorName: user.name ?? "", authorImage: user.image ?? "", itinerary: tripCopy)
+
+        var tripDocRef = self.tripDeepCopy(tripCopy: trip)
+                
+//         creat a document to save post into Post collection
+        if let documentPath = firebaseController.addDocument(itemToAdd: newGuide, collectionPath: "Guide", documentPath: newGuide.id.uuidString){
+            
+            // add the trip document reference into the guide document
+            if let tripDocRef = tripDocRef{
+                firebaseController.updateField(object: tripDocRef, collectionPath: "Guide", documentPath: newGuide.id.uuidString, attributeName: "itinerary")
+            }
+            
+            // then stored its reference into user documet
+            firebaseController.addReferenceToArray(referenceToAdd: documentPath, collectionPath: "User", documentPath: firebaseController.currentUser?.uid ?? "", attributeName: "guides")
+        }
     }
     
     
@@ -112,5 +118,52 @@ class UserManager: ObservableObject {
     
     func editPost(){
         
+    }
+    
+    private func tripDeepCopy(tripCopy: Trip) -> DocumentReference?{
+        
+        let tripDocRef = firebaseController.addDocument(itemToAdd: tripCopy, collectionPath: "Trip", documentPath: tripCopy.id.uuidString)
+        
+        // add each of the event per day as a subcollection in trip document
+        for eventPerDay in tripCopy.events {
+            let _ = firebaseController.addDocument(itemToAdd: eventPerDay, collectionPath: "Trip/\(tripCopy.id.uuidString)/events", documentPath: eventPerDay.id.uuidString)
+            for event in eventPerDay.events {
+                
+                // create a new documennt inside the event collection, then store the reference inside the event per day document
+                if let eventDoocRef = firebaseController.addDocument(itemToAdd: event, collectionPath: "Event", documentPath: event.id.uuidString){
+                    firebaseController.addReferenceToArray(referenceToAdd: eventDoocRef, collectionPath: "Trip/\(tripCopy.id.uuidString)/events", documentPath: eventPerDay.id.uuidString, attributeName: "events")
+                }
+            }
+        }
+        
+        for expensePerDay in tripCopy.expenses{
+            let _ = firebaseController.addDocument(itemToAdd: expensePerDay, collectionPath: "Trip/\(tripCopy.id.uuidString)/expenses", documentPath: expensePerDay.id.uuidString)
+            for expense in expensePerDay.expensesPerDay {
+                
+                if let expenseDocRef = firebaseController.addDocument(itemToAdd: expense, collectionPath: "Expense", documentPath: expense.id.uuidString){
+                    firebaseController.addReferenceToArray(referenceToAdd: expenseDocRef, collectionPath: "Trip/\(tripCopy.id.uuidString)/expenses", documentPath: expensePerDay.id.uuidString, attributeName: "expensesPerDay")
+                }
+            }
+        }
+        
+        for checklistCategory in tripCopy.checklist{
+            let _ = firebaseController.addDocument(itemToAdd: checklistCategory, collectionPath: "Trip/\(tripCopy.id.uuidString)/checklists", documentPath: checklistCategory.id.uuidString)
+            
+            for checklist in checklistCategory.checklists {
+                
+                if let checklistDocRef = firebaseController.addDocument(itemToAdd: checklist, collectionPath: "Checklist", documentPath: checklist.id.uuidString){
+                    firebaseController.addReferenceToArray(referenceToAdd: checklistDocRef, collectionPath: "Trip/\(tripCopy.id.uuidString)/checklists", documentPath: checklistCategory.id.uuidString, attributeName: "checklists")
+                }
+            }
+        }
+        
+        for savedPlace in tripCopy.savedPlaces {
+            let _ = firebaseController.addDocument(itemToAdd: savedPlace, collectionPath: "Trip/\(tripCopy.id.uuidString)/savedPlaces", documentPath: savedPlace.id.uuidString)
+        }
+        
+        if let tripDocRef = tripDocRef{
+            return tripDocRef
+        }
+        return nil
     }
 }

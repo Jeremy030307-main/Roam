@@ -12,13 +12,13 @@ import Firebase
 import FirebaseAuth
 
 class FirebaseController: ObservableObject{
-    public static let shared = FirebaseController()
     
+    public static let shared = FirebaseController()
     @Published var user = User()
     @Published var post = [Post]()
     @Published var guide = [Guide]()
         
-    var db: Firestore
+    private var db: Firestore
     var currentUser: FirebaseAuth.User?
     var errorMessage: String? 
     
@@ -136,7 +136,7 @@ extension FirebaseController{
 
                 }
                 if (change.type == .removed) {
-                    self.user.trips.remove(at: Int(change.oldIndex))
+                    self.user.trips.removeAll(where: {$0.id == trip.id})
                 }
             }
         }
@@ -516,7 +516,7 @@ extension FirebaseController{
                     self.fetchComment(postIndex: currentIndex, type: .guide)
                 }
                 if (change.type == .removed) {
-                    self.user.guides.remove(at: Int(change.oldIndex))
+                    self.user.guides.removeAll(where: {$0.id == guide.id})
                 }
             }
         }

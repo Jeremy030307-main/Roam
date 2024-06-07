@@ -115,7 +115,7 @@ struct ItineraryPostView: View {
                             }
                         }
                         
-                    }.padding(.top,5)
+                    }
                 }
                 .padding(10)
                 
@@ -132,7 +132,9 @@ struct ItineraryPostView: View {
         }
         .padding(.top, 2)
         .fullScreenCover(isPresented: $showDetail){
-            TripMainView(trip: postManager.itineraryPost!.itinerary!, editable: false)
+            if postManager.itineraryPost?.itinerary != nil {
+                TripMainView(trip: postManager.itineraryPost!.itinerary!, editable: false)
+            }
         }
     }
 }

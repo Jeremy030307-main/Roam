@@ -46,7 +46,7 @@ struct SideImageCard<Content: View>: View {
                     }
                 }
             }
-            .frame(width: width, height: textHeight)
+            .frame(width: width)
             
             content
         }
