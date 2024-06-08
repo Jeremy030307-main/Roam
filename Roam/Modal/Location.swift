@@ -11,7 +11,7 @@ import FirebaseFirestoreSwift
 
 struct Location: Hashable , Identifiable, Codable{
     
-    @DocumentID var id: String?
+    var id: String?
     var name: String?
     var address: String?
     var rating: Double?

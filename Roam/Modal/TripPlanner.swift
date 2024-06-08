@@ -188,8 +188,12 @@ struct Trip: Hashable , Identifiable, Codable{
         self.checklist = checklist
     }
     
-    init(trip: Trip){
+    init(trip: Trip, clearData: Bool){
         self = trip
+        
+        if clearData{
+            self.totalSpent = nil
+        }
         
         self.id = UUID()
         for index in 0 ..< self.savedPlaces.count {
@@ -201,11 +205,18 @@ struct Trip: Hashable , Identifiable, Codable{
             
             for eventIndex in 0 ..< self.events[index].events.count{
                 self.events[index].events[eventIndex].id = UUID()
+                if clearData{
+                    self.events[index].events[eventIndex].expense = nil
+                }
             }
         }
         
         for index in 0 ..< self.expenses.count{
             self.expenses[index].id = UUID()
+            
+            if clearData{
+                self.expenses[index].expensesPerDay.removeAll()
+            }
             
             for expenseIndex in 0 ..< self.expenses[index].expensesPerDay.count{
                 self.expenses[index].expensesPerDay[expenseIndex].id = UUID()
@@ -217,6 +228,7 @@ struct Trip: Hashable , Identifiable, Codable{
             
             for checklistIndex in 0 ..< self.checklist[index].checklists.count{
                 self.checklist[index].checklists[checklistIndex].id = UUID()
+                self.checklist[index].checklists[checklistIndex].completed = false
             }
         }
     }

@@ -26,8 +26,11 @@ class EventManager: ObservableObject {
         if edittingEndDay < edittingStartDay {
             return true
         } else  if edittingEndDay == edittingStartDay{
-            if edittingEndTime < edittingStartTime {
-                return true
+            let startTime = Calendar.current.date(byAdding: .minute, value: 29, to: edittingStartTime)
+            if let startTime = startTime{
+                if edittingEndTime < startTime {
+                    return true
+                }
             }
         }
         
@@ -127,6 +130,8 @@ class EventManager: ObservableObject {
         
         if minutes == 0 {
             returnText += " " + (hours > 1 ? "\(hours) hours":"\(hours) hour")
+        } else if hours == 0 {
+            returnText += " " + "\(minutes) minutes"
         }
         else {
             let firstPart = hours > 1 ? "\(hours) hours":"\(hours) hour"

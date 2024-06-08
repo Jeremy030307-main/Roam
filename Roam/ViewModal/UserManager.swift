@@ -63,20 +63,53 @@ class UserManager: ObservableObject {
                     
                     // if delete successful, delete reference from User document
                     await firebaseController.removeReferenceFromarray(referenceToRemove: documentReference, collectionPath: "User", documentPath: firebaseController.currentUser?.uid ?? "", attributeName: "trips")
+                }
+                
+                for eventPerDay in tripDeleted.events{
+                    let _ = await firebaseController.deleteDocument(collectionPath: "Trip/\(tripDeleted.id.uuidString)/events", documentPath: eventPerDay.id.uuidString)
                     
-                    for day in 0..<(tripDeleted.totalDays ?? 0){
-                        let _ = await firebaseController.deleteDocument(collectionPath: "Trip/\(tripDeleted.id.uuidString)/events", documentPath: tripDeleted.events[day].id.uuidString)
-                        let _ = await firebaseController.deleteDocument(collectionPath: "Trip/\(tripDeleted.id.uuidString)/expenses", documentPath: tripDeleted.expenses[day].id.uuidString)
+                    for event in eventPerDay.events {
+                        let _ = await firebaseController.deleteDocument(collectionPath: "Event", documentPath: event.id.uuidString)
                     }
+                }
+                
+                for expensePerDay in tripDeleted.expenses{
+                    let _ = await firebaseController.deleteDocument(collectionPath: "Trip/\(tripDeleted.id.uuidString)/expenses", documentPath: expensePerDay.id.uuidString)
                     
+                    for expense in expensePerDay.expensesPerDay{
+                        let _ = await firebaseController.deleteDocument(collectionPath: "Expense", documentPath: expense.id.uuidString)
+                    }
+                }
+                
+                for checklistCategory in tripDeleted.checklist{
+                    let _ = await firebaseController.deleteDocument(collectionPath: "Trip/\(tripDeleted.id.uuidString)/checklists", documentPath: checklistCategory.id.uuidString)
+                    
+                    for checklist in checklistCategory.checklists {
+                        let _ = await firebaseController.deleteDocument(collectionPath: "Checklist", documentPath: checklist.id.uuidString)
+                    }
+                }
+                
+                for savedPlace in tripDeleted.savedPlaces {
+                    let _ = await firebaseController.deleteDocument(collectionPath: "Trip/\(tripDeleted.id.uuidString)/savedPlaces", documentPath: savedPlace.id.uuidString)
                 }
             }
         }
     }
     
-    func addTripFromGuide(guideTrip: Trip, name: String){
+    func addTripFromGuide(guideTrip: Trip, name: String, startDate: Date){
         
+        let endDate = Calendar.current.date(byAdding: .day, value: (guideTrip.totalDays ?? 1)-1, to: startDate)
         // first, we need to deep coopy the trip
+        var tripCopy = Trip(trip: guideTrip, clearData: true)
+        tripCopy.title = name
+        tripCopy.startDate = startDate
+        tripCopy.endDate = endDate
+        
+        if let tripDocRef = self.tripDeepCopy(tripCopy: tripCopy){
+            // add reference into User document
+            firebaseController.addReferenceToArray(referenceToAdd: tripDocRef, collectionPath: "User",documentPath: firebaseController.currentUser?.uid ?? "",attributeName: "trips")
+
+        }
     }
     
     func addNewPost(title: String, content: String){
@@ -93,10 +126,10 @@ class UserManager: ObservableObject {
     
     func addNewGuide(trip: Trip){
         
-        let tripCopy = Trip(trip: trip)
+        let tripCopy = Trip(trip: trip, clearData: false)
         let newGuide = Guide(authorID: user.id ?? "", authorName: user.name ?? "", authorImage: user.image ?? "", itinerary: tripCopy)
 
-        var tripDocRef = self.tripDeepCopy(tripCopy: trip)
+        let tripDocRef = self.tripDeepCopy(tripCopy: tripCopy)
                 
 //         creat a document to save post into Post collection
         if let documentPath = firebaseController.addDocument(itemToAdd: newGuide, collectionPath: "Guide", documentPath: newGuide.id.uuidString){

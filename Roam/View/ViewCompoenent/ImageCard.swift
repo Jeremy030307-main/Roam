@@ -78,12 +78,12 @@ struct SideImageCard<Content: View>: View {
 
 struct TopImagaeCard<Content: View>: View {
     
-    var image: Image
+    var image: String
     let content: Content
     var backgroundColor: Color
     var height: CGFloat
     
-    init(image: Image, backgroundColor: Color, height: CGFloat, @ViewBuilder content: () -> Content) {
+    init(image: String, backgroundColor: Color, height: CGFloat, @ViewBuilder content: () -> Content) {
         self.image = image
         self.height = height
         self.backgroundColor = backgroundColor
@@ -93,13 +93,29 @@ struct TopImagaeCard<Content: View>: View {
     var body: some View{
     
         VStack(alignment: .leading){
-            
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(height: height/2 > 150 ? 150: height/2)
-                .frame(maxWidth: .infinity)
-                .clipped()
+            VStack{
+                AsyncImage(url: URL(string: convertHTTP(url: self.image) ?? "")){ phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: height/2 > 150 ? 150: height/2)
+                            .frame(maxWidth: .infinity)
+                            .clipped()
+                        
+                    } else if phase.error != nil {
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .imageScale(.large)
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(.secondary)
+                        
+                    } else {
+                        ProgressView()
+                    }
+                }
+            }
+            .frame(height: height/2 > 150 ? 150: height/2)
+
             content
         }
         .frame(maxWidth: .infinity)
@@ -108,4 +124,11 @@ struct TopImagaeCard<Content: View>: View {
         .cornerRadius(10)
 
         }
+    
+    func convertHTTP(url: String) -> String? {
+        var comps = URLComponents(string: url)
+        comps?.scheme = "https"
+        let https = comps?.string
+        return https
+    }
 }

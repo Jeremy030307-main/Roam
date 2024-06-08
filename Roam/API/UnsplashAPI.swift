@@ -1,7 +1,8 @@
 //
 //  UnsplashAPI.swift
 //  Roam
-//
+//  View Model to fetch data from Unsplace API
+
 //  Created by Jeremy Teng  on 07/06/2024.
 //
 
@@ -56,6 +57,11 @@ class UnsplashAPI: ObservableObject {
         await self.fetchRandomPhoto(query:query)
     }
     
+    /**
+    Get a random photo from Unspalsh API with specific search term
+     - Parameters:
+        - query: searh term
+     */
     func fetchRandomPhoto(query: String) async {
         
         searchURLComponents.path = "/photos/random"
@@ -83,6 +89,9 @@ class UnsplashAPI: ObservableObject {
         print("End")
     }
     
+    /**
+    Get he topic id from Unsplash API
+     */
     func fetchTopic() async {
         
         searchURLComponents.path = "/topics/travel"

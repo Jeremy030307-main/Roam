@@ -16,6 +16,14 @@ enum FetchingState{
 
 struct APISerivce {
     
+    /**
+    Fetch a spedific type of data from an specific api
+     - Reference: https://github.com/gahntpo/CatAPISwiftUI
+     - Parameters:
+        - type: Type of object that the data encode into
+        - url: url endpoint of the api service
+        - apiKey: Access key of the api
+    */
     func fetch<T: Decodable>(_ type: T.Type, url: URL?, apiKey: String?, completion: @escaping(Result<T,APIError>) -> Void) async{
                 
         guard let requestURL = url else {

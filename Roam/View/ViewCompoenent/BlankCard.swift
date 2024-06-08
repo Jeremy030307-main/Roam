@@ -24,7 +24,7 @@ struct BlankCard<Content:View>: View {
             
             content
         }
-        .padding()
+        .padding(10)
         .background(color)
         .cornerRadius(20)
     }

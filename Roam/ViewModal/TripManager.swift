@@ -63,7 +63,7 @@ class TripManager: ObservableObject {
         } else{
             let previousComponent = Calendar.current.dateComponents([.hour, .minute], from: previousEvent.startTime)
             let previousMinutes = (previousComponent.hour ?? 0) * 60 + (previousComponent.minute ?? 0)
-            return Int(Double(minutes-previousMinutes-45) * 1.5)
+            return (Int(Double(minutes-previousMinutes) * 1.5) - 45)
         }
     }
 }
@@ -140,6 +140,18 @@ extension TripManager {
                     newEventErrorMessage = "End time cannot be before start time."
                     return false
                 }
+                
+                if ((endHour*60 + endMin) - (startHour*60 + startMin)) < 30{
+                    newEventErrorMessage = "A duration of 30 minutes event is required."
+                    return false
+                }
+            }
+        }
+        
+        if newEventType == .accomodation || newEventType == .carRental {
+            if (newEventStartDay == newEventEndDay){
+                newEventErrorMessage = "\(newEventType.name) event need to have overnight schedule. "
+                return false
             }
         }
         
@@ -171,11 +183,19 @@ extension TripManager {
         
         // if the event created is a valid event, start to add into Firebase
         if let documentPath = firebaseController.addDocument(itemToAdd: newEvent, collectionPath: "Event", documentPath: newEvent.id.uuidString){
-            for day in newEventStartDay ... newEventEndDay {
-                let eventPerDay = trip.events[day-1]
-                firebaseController.addReferenceToArray(referenceToAdd: documentPath, collectionPath: "Trip/\(trip.id.uuidString)/events", documentPath: eventPerDay.id.uuidString, attributeName: "events")
+            if newEventType == .accomodation || newEventType == .carRental{
+                for day in [newEventStartDay, newEventEndDay]{
+                    let eventPerDay = trip.events[day-1]
+                    firebaseController.addReferenceToArray(referenceToAdd: documentPath, collectionPath: "Trip/\(trip.id.uuidString)/events", documentPath: eventPerDay.id.uuidString, attributeName: "events")
+                }
+            } else {
+                for day in newEventStartDay ... newEventEndDay {
+                    let eventPerDay = trip.events[day-1]
+                    firebaseController.addReferenceToArray(referenceToAdd: documentPath, collectionPath: "Trip/\(trip.id.uuidString)/events", documentPath: eventPerDay.id.uuidString, attributeName: "events")
+                }
             }
             return true
+                
         }
         return false
     }
@@ -234,6 +254,11 @@ extension TripManager {
                     newEventErrorMessage = "End time cannot be before start time."
                     return false
                 }
+                
+                if ((endHour*60 + endMin) - (startHour*60 + startMin)) < 30{
+                    newEventErrorMessage = "A duration of 30 minutes event is required."
+                    return false
+                }
             }
         }
         
@@ -270,10 +295,11 @@ extension TripManager {
                     startMinutesAfter = 0
                 }
                 if day != eventEndDay {
-                    endMinutesAfter = 12*60
+                    endMinutesAfter = 24*60
                 }
             }
             
+            print(startMinutesAfter, endMinutesAfter)
             let eventAddedRange = startMinutesAfter ... endMinutesAfter
 
             for event in trip.events[day-1].events{
@@ -285,11 +311,20 @@ extension TripManager {
                 var existEndMinutesAfter = existEndHour*60 + existEndMin
                 
                 if event.startDay != event.endDay {
-                    if day != event.startDay{
-                        existStartMinutesAfter = 0
-                    }
-                    if day != event.endDay {
-                        existEndMinutesAfter = 12*60
+                    if event.type == EventType.accomodation.rawValue || event.type == EventType.carRental.rawValue {
+                        if day != event.startDay{
+                            existStartMinutesAfter = existEndMinutesAfter - 30
+                        }
+                        if day != event.endDay {
+                            existEndMinutesAfter = existStartMinutesAfter + 30
+                        }
+                    } else {
+                        if day != event.startDay{
+                            existStartMinutesAfter = 0
+                        }
+                        if day != event.endDay {
+                            existEndMinutesAfter = 24*60
+                        }
                     }
                 }
                 let eventExistRange = existStartMinutesAfter ... existEndMinutesAfter

@@ -7,6 +7,10 @@
 
 import Foundation
 
+/**
+  Enum to represent all the api erro that could appear
+    - Reference: https://github.com/gahntpo/CatAPISwiftUI
+*/
 enum APIError: Error, CustomStringConvertible {
     case badURL
     case badResponse(statusCode: Int)

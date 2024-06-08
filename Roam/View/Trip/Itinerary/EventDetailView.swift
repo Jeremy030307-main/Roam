@@ -156,12 +156,29 @@ struct LocationDetailView: View {
             
             // Place title section
             HStack(alignment: .top){
-                Image(eventManager.event.location.image ?? "")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 110, height: 110)
-                    .clipped()
-                    .cornerRadius(10)
+                
+                VStack{
+                    AsyncImage(url: URL(string: convertHTTP(url: eventManager.event.location.image ?? "") ?? "")){ phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 110, height: 110)
+                                .clipped()
+                                .cornerRadius(10)
+                            
+                        } else if phase.error != nil {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .imageScale(.large)
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(.secondary)
+                            
+                        } else {
+                            ProgressView()
+                        }
+                    }
+                }
+                .frame(width: 110, height: 110)
                 
                 VStack(alignment: .leading){
                     Text(eventManager.event.location.name ?? "").font(.title3).bold()
@@ -171,6 +188,7 @@ struct LocationDetailView: View {
                 .padding(.vertical, 10)
                 .padding(.leading, 5)
             }
+            .padding()
         
             // Event date time
             VStack(alignment: .leading){
@@ -205,6 +223,13 @@ struct LocationDetailView: View {
         }
         .padding()
     }
+    
+    func convertHTTP(url: String) -> String? {
+        var comps = URLComponents(string: url)
+        comps?.scheme = "https"
+        let https = comps?.string
+        return https
+    }
 }
 
 struct PeriodicDetailView: View{
@@ -221,17 +246,33 @@ struct PeriodicDetailView: View{
     var body: some View{
         VStack(alignment: .leading){
             
-            // Place title section
-            HStack(alignment: .top){
-                Image(eventManager.event.location.image ?? "")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 90, height: 90)
-                    .clipped()
-                    .cornerRadius(10)
+            HStack(){
                 
+                VStack{
+                    AsyncImage(url: URL(string: convertHTTP(url: eventManager.event.location.image ?? "") ?? "")){ phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 90, height: 90)
+                                .clipped()
+                                .cornerRadius(10)
+                            
+                        } else if phase.error != nil {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .imageScale(.large)
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(.secondary)
+                            
+                        } else {
+                            ProgressView()
+                        }
+                    }
+                }
+                .frame(width: 90, height: 90)
+
                 VStack(alignment: .leading){
-                    Text(eventManager.event.location.name ?? "").font(.headline).bold()
+                    Text(eventManager.event.location.name ?? "").font(.title3).bold()
                     Text(eventManager.event.location.address ?? "").font(.subheadline).opacity(0.5)
                 }
                 .fixedSize(horizontal: false, vertical: true)
@@ -241,7 +282,8 @@ struct PeriodicDetailView: View{
             .padding()
             .background(Color(.secondarySystemBackground))
             .cornerRadius(10)
-            
+            .padding(.top)
+        
             VStack(alignment: .leading){
                 Text(startText).font(.title3).bold().padding(.top)
                 VStack(alignment: .trailing){
@@ -265,6 +307,13 @@ struct PeriodicDetailView: View{
             .padding(.vertical, 10)
         }
         .padding(.horizontal)
+    }
+    
+    func convertHTTP(url: String) -> String? {
+        var comps = URLComponents(string: url)
+        comps?.scheme = "https"
+        let https = comps?.string
+        return https
     }
 }
 

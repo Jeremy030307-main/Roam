@@ -22,6 +22,14 @@ class AuthenticationVM: ObservableObject {
     @Published var username: String = ""
     @Published var authenticationState: AuthenticationState = .unauthenticated
     @Published var currentUser: FirebaseAuth.User?
+    @Published var errorMessage = ""
+    
+    var validPasswordLength: Bool {
+        if password.count >= 8{
+            return true
+        }
+        return false
+    }
     
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     
@@ -42,6 +50,9 @@ class AuthenticationVM: ObservableObject {
 // Email and password Authentication
 extension AuthenticationVM {
     
+    /**
+     Sign in a user with email and password
+     */
     func signInWithEmailPassword() async -> Bool{
         authenticationState = .authenticating
         do {
@@ -51,11 +62,27 @@ extension AuthenticationVM {
             print("Failed to Sign In \(error.localizedDescription)")
             self.authenticationState = .unauthenticated
             clearInput()
+            errorMessage = "Invalid Email and Password"
             return false
         }
     }
     
+    /**
+     Sign up  a user with email and password
+     */
     func signUpWithEmailPassword() async -> Bool {
+        if self.username.trimmingCharacters(in: .whitespaces).isEmpty{
+            errorMessage = "Username must not e empty."
+            return false
+        }
+        if self.password.trimmingCharacters(in: .whitespaces).isEmpty{
+            errorMessage = "Password must not be empty"
+            return false
+        } else {
+            if self.password.count < 8 {
+                errorMessage = "Password must longer than 8 characters."
+            }
+        }
         authenticationState = .authenticating
         if password.count > 0{
             do {
@@ -69,12 +96,17 @@ extension AuthenticationVM {
                 print("Failed to Sign Up \(error.localizedDescription)")
                 self.authenticationState = .unauthenticated
                 clearInput()
+                errorMessage = "Invalid Email and Password"
                 return false
             }
         }
+        self.authenticationState = .unauthenticated
         return false
     }
     
+    /**
+     Sign out a user
+     */
     func signOut() {
         do{
             try Auth.auth().signOut()
@@ -84,7 +116,10 @@ extension AuthenticationVM {
         }
     }
     
-    func clearInput(){
+    /**
+     Clear the input of the text field
+     */
+    private func clearInput(){
         email = ""
         password = ""
     }

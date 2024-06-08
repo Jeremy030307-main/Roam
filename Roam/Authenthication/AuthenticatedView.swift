@@ -1,5 +1,6 @@
 //
 //  AuthenticatedView.swift
+//  View that switch between authentication page and the content of the application
 //  Roam
 //
 //  Created by Jeremy Teng  on 25/05/2024.

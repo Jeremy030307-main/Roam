@@ -31,6 +31,7 @@ struct AddNewTripView: View {
     
     @State var addPax = false
     @State var pax: Int = 1
+    @FocusState var isFocused: Bool
     
     var inValidTrip : Bool {
         if title.trimmingCharacters(in: .whitespaces).isEmpty{
@@ -99,15 +100,6 @@ struct AddNewTripView: View {
                             )
                         }
                     } header: {
-                        VStack(alignment: .leading){
-                            Text("Trip length").foregroundStyle(.accent)
-                            Picker("", selection: $lengthTypeSelection) {
-                                Text("Date").tag(TripLengthType.date)
-                                Text("Day").tag(TripLengthType.day)
-                            }
-                            .pickerStyle(.segmented)
-                            .padding(.bottom, 5)
-                        }
                     } footer: {
                         if lengthTypeSelection == .date{
                             if !invalidPeriod{
@@ -162,6 +154,7 @@ struct AddNewTripView: View {
                     Section(header: Text("Location Search")) {
                         ZStack(alignment: .trailing) {
                             TextField("Search", text: $locationService.queryFragment)
+                                .focused($isFocused)
                             // This is optional and simply displays an icon during an active search
                             if locationService.status == .isSearching {
                                 Image(systemName: "clock")
@@ -169,6 +162,9 @@ struct AddNewTripView: View {
                             }
                         }
                         .matchedGeometryEffect(id: "destinationSearch", in: destinationSearchAnimation)
+                        .onAppear {
+                            isFocused = true
+                        }
                     }
                     Section(header: Text("Results")) {
                         List {

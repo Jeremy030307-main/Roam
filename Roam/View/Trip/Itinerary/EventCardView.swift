@@ -72,10 +72,13 @@ struct TransportationEventCard: View {
     
     var body: some View{
         BlankCard(cardColor: .white) {
+            
             LazyVGrid(columns: columns, content: {
                 VStack(alignment: .center){
-                    Text(eventManager.getStartTimeText()).font(.system(size: 15)).bold()
-                    Text(eventManager.event.location.name ?? "").font(.system(size: 10)).opacity(0.5).padding(.top, 0.2)
+                    if eventManager.getEventHeight(atDay: day) > 45{
+                        Text(eventManager.getStartTimeText()).font(.system(size: 15)).bold()
+                    }
+                    Text(eventManager.event.location.name ?? "").font(.system(size: eventManager.getEventHeight(atDay: day) > 45 ? 10:12)).opacity(0.5).padding(.top, 0.2)
                 }
                 
                 ZStack{
@@ -90,19 +93,21 @@ struct TransportationEventCard: View {
                         .frame(height: 1)
                     VStack(){
                         Spacer()
+                        Text(eventManager.getEventDurationText()).font(.system(size: 10))
                     }
                 
                 }
                 .foregroundStyle(.gray).opacity(0.5)
                 
                 VStack(alignment: .center){
-                    Text(eventManager.getEndTimeText()).font(.system(size: 15)).bold()
-                    Text(eventManager.event.destination?.name ?? "").font(.system(size: 10)).opacity(0.5).padding(.top, 0.2)
+                    if eventManager.getEventHeight(atDay: day) > 45{
+                        Text(eventManager.getEndTimeText()).font(.system(size: 15)).bold()
+                    }
+                    Text(eventManager.event.destination?.name ?? "").font(.system(size: eventManager.getEventHeight(atDay: day) > 45 ? 10:12)).opacity(0.5).padding(.top, 0.2)
                 }
             })
-            .frame(maxHeight: eventManager.getEventHeight(atDay: day))
+            .frame(height: eventManager.getEventHeight(atDay: day) > 45 ? eventManager.getEventHeight(atDay: day)-20:45-20)
         }
-        .frame(maxHeight: eventManager.getEventHeight(atDay: day))
     }
 }
     
@@ -113,7 +118,7 @@ struct PlaceEventCard: View {
 
     
     var body: some View{
-        if eventManager.getEventHeight(atDay: day) <= 50 {
+        if eventManager.getEventHeight(atDay: day) <= 45 {
             BlankCard(cardColor: Color(.systemBackground)) {
                 VStack(alignment: .leading){
                     Text(eventManager.event.location.name ?? "").font(.headline)
@@ -122,12 +127,11 @@ struct PlaceEventCard: View {
                         Spacer()
                         Text("\(eventManager.getEndTimeText())").font(.subheadline).opacity(0.5)
                     }
-                }.frame(maxHeight: eventManager.getEventHeight(atDay: day))
+                }.frame(height: 45-20)
             }
-            .frame(maxHeight: eventManager.getEventHeight(atDay: day))
         }
         else if eventManager.getEventHeight(atDay: day) > 180{
-            TopImagaeCard(image: Image(eventManager.event.location.image ?? ""), backgroundColor: Color(.systemBackground), height: eventManager.getEventHeight(atDay: day)) {
+            TopImagaeCard(image: eventManager.event.location.image ?? "", backgroundColor: Color(.systemBackground), height: eventManager.getEventHeight(atDay: day)) {
                 VStack(alignment: .leading){
                     Text(eventManager.event.location.name ?? "").font(.headline)
                         .multilineTextAlignment(.leading)
@@ -163,7 +167,6 @@ struct PlaceEventCard: View {
                 .frame(height: eventManager.getEventHeight(atDay: day))
                 .frame(maxWidth: .infinity)
                 .padding(.trailing, 10)
-                .padding(.vertical, 5)
             }
         }
     }
@@ -191,8 +194,8 @@ struct PeriodicEventCard: View {
             
             Image(systemName: "chevron.forward").padding(.trailing, 10)
         }
-        .frame(height: 45)
-        .background(.quinary).cornerRadius(5)
+        .frame(height: 45).cornerRadius(5)
+        .background(.quaternary)
     }
 }
 

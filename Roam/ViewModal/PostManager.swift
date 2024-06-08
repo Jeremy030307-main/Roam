@@ -53,10 +53,10 @@ class VoteManager: ObservableObject {
             }
             
             if let parent = parentPost {
-                firebaseController.addStringToArray(stringtoAdd: currentUser.id ?? "", collectionPath: "\(collectionName)/\(parent.id.uuidString)/Comment", documentPath: voteItem.id.uuidString, attributeName: "upvote")
+                firebaseController.addValueToArray(valuetoAdd: currentUser.id ?? "", collectionPath: "\(collectionName)/\(parent.id.uuidString)/Comment", documentPath: voteItem.id.uuidString, attributeName: "upvote")
             } else {
                 // add the user_id into the upvote array
-                firebaseController.addStringToArray(stringtoAdd: currentUser.id ?? "", collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: "upvote")
+                firebaseController.addValueToArray(valuetoAdd: currentUser.id ?? "", collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: "upvote")
             }
             
             // update the vote_count
@@ -77,10 +77,10 @@ class VoteManager: ObservableObject {
             }
             
             if let parent = parentPost {
-                firebaseController.addStringToArray(stringtoAdd: currentUser.id ?? "", collectionPath: "\(collectionName)/\(parent.id.uuidString)/Comment", documentPath: voteItem.id.uuidString, attributeName: "downvote")
+                firebaseController.addValueToArray(valuetoAdd: currentUser.id ?? "", collectionPath: "\(collectionName)/\(parent.id.uuidString)/Comment", documentPath: voteItem.id.uuidString, attributeName: "downvote")
             } else{
                 // add the user_id into the downvote array
-                firebaseController.addStringToArray(stringtoAdd: currentUser.id ?? "", collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: "downvote")
+                firebaseController.addValueToArray(valuetoAdd: currentUser.id ?? "", collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: "downvote")
             }
             
             // update the vote_count
@@ -108,9 +108,9 @@ class VoteManager: ObservableObject {
         Task{
             // firest remove the current user from upvote array
             if let parent = parentPost {
-                await firebaseController.removeStringFromArray(stringToremove:currentUser.id ?? "", collectionPath:"\(collectionName)/\(parent.id.uuidString)/Comment", documentPath:voteItem.id.uuidString, attributeName:attributeName)
+                await firebaseController.removeValueFromArray(valueToremove:currentUser.id ?? "", collectionPath:"\(collectionName)/\(parent.id.uuidString)/Comment", documentPath:voteItem.id.uuidString, attributeName:attributeName)
             } else {
-                await firebaseController.removeStringFromArray(stringToremove: currentUser.id ?? "", collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: attributeName)
+                await firebaseController.removeValueFromArray(valueToremove: currentUser.id ?? "", collectionPath: collectionName, documentPath: voteItem.id.uuidString, attributeName: attributeName)
             }
         }
         self.updateVoteCount()

@@ -141,8 +141,12 @@ struct ItineraryPostView: View {
 
 struct PostCard: View {
     
+    @EnvironmentObject var userManager: UserManager
     @ObservedObject var postManager: PostManager
     @State var showDetail = false
+    @State var copyTrip = false
+    @State var startDate = Date()
+    
     
     init(post: any Postable) {
         self.postManager = PostManager(post: post)
@@ -157,6 +161,7 @@ struct PostCard: View {
             }
             else if postManager.itineraryPost != nil {
                 ItineraryPostView(postManager: postManager)
+                    .disabled(true)
             }
         }
         .onTapGesture {
@@ -173,13 +178,20 @@ struct PostCard: View {
                 PostDetailView(postManager: postManager){
                     ItineraryPostView(postManager: postManager)
                     Button{
-                        
+                        userManager.addTripFromGuide(guideTrip: (postManager.itineraryPost?.itinerary)!, name: "Testign copy trip", startDate: startDate)
                     } label: {
                         Text("Copy Trip").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                 }
             }
+        }
+        .sheet(isPresented: $copyTrip) {
+            DatePicker(
+                "Start Date",
+                selection: $startDate,
+                displayedComponents: [.date]
+            )
         }
     }
 }

@@ -21,7 +21,6 @@ struct SavedPlacesView: View {
                     SavedPlacesCard(tripManager: tripManager, location: location, categoryIndex: savedplaceCaegoryIndex, index: index, editable: editable)
                 }
                 .background(Color(.secondarySystemBackground))
-
             }
             .padding()
             .navigationBarTitleDisplayMode(.inline)
@@ -34,6 +33,9 @@ struct SavedPlacesView: View {
                 }
             }
             .background(Color(.secondarySystemBackground))
+            .onSubmit {
+                print(tripManager.trip.savedPlaces[savedplaceCaegoryIndex])
+            }
         }
     }
 }

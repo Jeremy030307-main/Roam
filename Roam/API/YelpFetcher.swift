@@ -30,6 +30,13 @@ class YelpFetcher: ObservableObject {
         searchURLComponents.host = "api.yelp.com"
     }
     
+    
+    /**
+    Fetch several buisiness from a Yelp api of a certain location
+     - Parameters:
+        - categories: Categories of the buisiness
+        - requestIndex: the frequency of the request
+    */
     func fetchBeuisinessByLocation(categories: String?, requestIndex: Int = 0) async {
         
         if requestIndex == 0 {
@@ -61,6 +68,12 @@ class YelpFetcher: ObservableObject {
         }
     }
     
+    /**
+    Fetch several buisiness from a Yelp api of a certain name
+     - Parameters:
+        - location: location of the serach scope
+        - requestIndex: the frequency of the request
+    */
     func fetchBeuisinessByName(location: String, requestIndex: Int = 0) async {
         
         if requestIndex == 0 {
@@ -92,6 +105,11 @@ class YelpFetcher: ObservableObject {
         }
     }
     
+    /**
+    Fetch the detail of a specific buisiness
+     - Parameters:
+        - id: id that directly reference to the buisines to search
+    */
     func fetchLocationDetail(id: String) async{
         
         isLoading  = true
@@ -113,6 +131,11 @@ class YelpFetcher: ObservableObject {
         await fetchLocationReview(id: id)
     }
     
+    /**
+    Fetch the review of a specific buisiness
+     - Parameters:
+        - id: id that directly reference to the buisines to search
+    */
     func fetchLocationReview(id: String) async {
         isLoading  = true
         let url = URL(string: "https://api.yelp.com/v3/businesses/\(id)/reviews")

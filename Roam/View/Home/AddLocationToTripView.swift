@@ -81,6 +81,7 @@ struct AddLocationToTripView: View {
                                 ForEach(Array(trip.savedPlaces.enumerated()), id: \.1.id) { index, savedPlace in
                                     Button{
                                         tripSelected!.addItemToList(categoryIndex: index, locationData: locationData)
+                                        addingEvent.toggle()
                                     } label: {
                                         HStack{
                                             TripCirceleIcon(image: Image(systemName: savedPlace.icon), color: SavedPlaceColor(rawValue: savedPlace.color)?.copy ?? .red, dimension: 30)

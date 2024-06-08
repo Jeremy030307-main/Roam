@@ -14,6 +14,8 @@ struct SearchLocationSheet: View {
     @ObservedObject var tripManager: TripManager
     @FocusState var isFocus: Bool
     @Binding var location: LocationData?
+    @State var requestIndex = 1
+
     var prompt: String
     
     var body: some View{
@@ -29,21 +31,44 @@ struct SearchLocationSheet: View {
                     }
             }
 
-            ForEach(yelpFetcher.locations, id: \.self){ location in
-                Button {
-                    self.location = location
-                    yelpFetcher.searchText = ""
-                    dismiss()
-                } label: {
-                    VStack(alignment: .leading){
-                        Text(location.name ?? "").font(.headline)
-                        Text(location.address ?? "").font(.subheadline)
+            Section{
+                ForEach(yelpFetcher.locations, id: \.self) { location in
+                    Button {
+                        self.location = location
+                        yelpFetcher.searchText = ""
+                        dismiss()
+                    } label: {
+                        VStack(alignment: .leading){
+                            Text(location.name ?? "").font(.headline)
+                            Text(location.address ?? "").font(.subheadline)
+                        }
                     }
+                }
+            }header: {
+               Text("Result")
+            } footer: {
+                if yelpFetcher.isLoading{
+                    HStack{
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                    .padding()
                 }
             }
         }
         .onAppear{
             isFocus = true
         }
+        .onChange(of: yelpFetcher.locations.count, { oldValue, newValue in
+            print("dfddfdfdsf")
+            Task{
+                if yelpFetcher.locations.count == requestIndex * yelpFetcher.QUERY_LIMIT &&
+                    requestIndex * yelpFetcher.QUERY_LIMIT <= 1000{
+                    await yelpFetcher.fetchBeuisinessByName(location: tripManager.trip.destination ?? "", requestIndex: requestIndex)
+                    requestIndex += 1
+                }
+            }
+        })
     }
 }

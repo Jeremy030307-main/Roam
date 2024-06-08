@@ -9,6 +9,9 @@ import Foundation
 import MapKit
 import Combine
 
+/**
+Object that responsible for offline city seerach from MKLocationSearch
+*/
 class CitySearchViewModal: NSObject,ObservableObject {
     
     enum LocationStatus: Equatable {

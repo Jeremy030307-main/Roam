@@ -19,41 +19,43 @@ struct ProfilePage: View {
     @State var currentPresentationDetent: PresentationDetent = .fraction(0.3)
     
     var body: some View {
-        VStack{
-            HStack{
-                Text("Profile").font(.title).bold()
-                Spacer()
-                Button{
-                    authViewModel.signOut()
-                } label: {
-                    Text("Log Out")
-                }
-            }
-            .padding(.horizontal)
-            
-            VStack {
-                ProfileCard(user: userManager.user)
-                ProfilePageTopNavBar(tabSelection: $tabSelection, addNewPost: $addNewPost)
-                
-                ScrollView{
-                    switch tabSelection {
-                    case .post:
-                        ForEach(userManager.user.posts){ post in
-                            PostCard(post: post)
-                        }
-                    case .guide:
-                        ForEach(userManager.user.guides) { guide in
-                            PostCard(post: guide)
-                        }
+        NavigationStack {
+            VStack{
+                HStack{
+                    Text("Profile").font(.title).bold()
+                    Spacer()
+                    NavigationLink {
+                        SettingView()
+                    } label: {
+                        Image(systemName: "ellipsis.circle.fill").imageScale(.large)
                     }
                 }
+                .padding(.horizontal)
                 
-                Spacer()
+                VStack {
+                    ProfileCard(user: userManager.user)
+                    ProfilePageTopNavBar(tabSelection: $tabSelection, addNewPost: $addNewPost)
+                    
+                    ScrollView{
+                        switch tabSelection {
+                        case .post:
+                            ForEach(userManager.user.posts){ post in
+                                PostCard(post: post)
+                            }
+                        case .guide:
+                            ForEach(userManager.user.guides) { guide in
+                                PostCard(post: guide)
+                            }
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                .padding()
             }
-            .padding()
-        }
-        .sheet(isPresented: $addNewPost){
-            AddPostView()
+            .sheet(isPresented: $addNewPost){
+                AddPostView()
+            }
         }
     }
 }
