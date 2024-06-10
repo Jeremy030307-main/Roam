@@ -45,12 +45,16 @@ class TripManager: ObservableObject {
     func getDistanceTwoEvent(day: Int, eventIndex: Int) -> Int{
         
         let event = trip.events[day-1].events[eventIndex]
-        let component = Calendar.current.dateComponents([.hour, .minute], from: event.startTime)
-        let minutes = (component.hour ?? 0) * 60 + (component.minute ?? 0)
+        let startComponent = Calendar.current.dateComponents([.hour, .minute], from: event.startTime)
+        let endComponent = Calendar.current.dateComponents([.hour, .minute], from: event.endTime)
+        let startMinutes = (startComponent.hour ?? 0) * 60 + (startComponent.minute ?? 0)
+        let endMinutes = (endComponent.hour ?? 0) * 60 + (endComponent.minute ?? 0)
 
         if eventIndex == 0 {
             if event.startDay == event.endDay || event.startDay == day{
-                return Int(Double(minutes) * 1.5)
+                return Int(Double(startMinutes) * 1.5)
+            } else if event.endDay == day && (event.type == EventType.accomodation.rawValue || event.type == EventType.carRental.rawValue) {
+                return Int(Double(endMinutes) * 1.5)
             } else {
                 return 0
             }
@@ -59,11 +63,11 @@ class TripManager: ObservableObject {
         if previousEvent.endDay == event.startDay{
             let previousComponent = Calendar.current.dateComponents([.hour, .minute], from: previousEvent.endTime)
             let previousMinutes = (previousComponent.hour ?? 0) * 60 + (previousComponent.minute ?? 0)
-            return Int(Double(minutes-previousMinutes) * 1.5)
+            return Int(Double(startMinutes-previousMinutes) * 1.5)
         } else{
             let previousComponent = Calendar.current.dateComponents([.hour, .minute], from: previousEvent.startTime)
             let previousMinutes = (previousComponent.hour ?? 0) * 60 + (previousComponent.minute ?? 0)
-            return (Int(Double(minutes-previousMinutes) * 1.5) - 45)
+            return (Int(Double(startMinutes-previousMinutes) * 1.5) - 45)
         }
     }
 }
@@ -168,6 +172,7 @@ extension TripManager {
         
         let newEvent = Event(type: newEventType.rawValue, startDay: newEventStartDay, endDay: newEventEndDay, startTime: newEventStartTime, endTime: newEventEndTime, location:locationToSave)
         
+        print("Before", newEvent.type)
         // check is the event clash with another event
         if let eventclash = self.isPeriodOccupied(newEvent: newEvent){
             var dateFormatter: DateFormatter {
@@ -299,7 +304,6 @@ extension TripManager {
                 }
             }
             
-            print(startMinutesAfter, endMinutesAfter)
             let eventAddedRange = startMinutesAfter ... endMinutesAfter
 
             for event in trip.events[day-1].events{
@@ -327,16 +331,34 @@ extension TripManager {
                         }
                     }
                 }
+                
                 let eventExistRange = existStartMinutesAfter ... existEndMinutesAfter
-                
-                // check weather the existing start time or end time is withini the ragne of newly added event, if yes it is occupied
-                if eventAddedRange.contains(existStartMinutesAfter) && eventAddedRange.contains(existEndMinutesAfter) {
-                    return event
+                if newEvent.type == EventType.accomodation.rawValue || newEvent.type == EventType.carRental.rawValue {
+                    let firstPeriod = startMinutesAfter ... startMinutesAfter+30
+                    let lastPeriod = endMinutesAfter ... endMinutesAfter+30
+                    
+                    if firstPeriod.contains(existStartMinutesAfter) && firstPeriod.contains(existEndMinutesAfter) {
+                        return event
+                    }
+                    if eventExistRange.contains(startMinutesAfter) || eventExistRange.contains(startMinutesAfter+30){
+                        return event
+                    }
+                    
+                    if lastPeriod.contains(existStartMinutesAfter) && lastPeriod.contains(existEndMinutesAfter) {
+                        return event
+                    }
+                    if eventExistRange.contains(endMinutesAfter) || eventExistRange.contains(endMinutesAfter+20){
+                        return event
+                    }
+                } else {
+                    // check weather the existing start time or end time is within the ragne of newly added event, if yes it is occupied
+                    if eventAddedRange.contains(existStartMinutesAfter) && eventAddedRange.contains(existEndMinutesAfter) {
+                        return event
+                    }
+                    if eventExistRange.contains(startMinutesAfter) || eventExistRange.contains(endMinutesAfter){
+                        return event
+                    }
                 }
-                if eventExistRange.contains(startMinutesAfter) || eventExistRange.contains(endMinutesAfter){
-                    return event
-                }
-                
             }
         }
         return nil
