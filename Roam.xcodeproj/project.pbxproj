@@ -23,6 +23,8 @@
 		164AA8392BE2089C004B54FE /* EventManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 164AA8382BE2089C004B54FE /* EventManager.swift */; };
 		164AA83B2BE2B4A3004B54FE /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 164AA83A2BE2B4A3004B54FE /* EventDetailView.swift */; };
 		164AA83D2BE35866004B54FE /* AddEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 164AA83C2BE35866004B54FE /* AddEventView.swift */; };
+		164ACD382E4B39280080499F /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 164ACD372E4B39230080499F /* .gitignore */; };
+		164ACD3C2E4B43BC0080499F /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 164ACD3B2E4B43BC0080499F /* Config.xcconfig */; };
 		165813302BDA79500026DA9D /* PostManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1658132F2BDA79500026DA9D /* PostManager.swift */; };
 		165813362BDACC880026DA9D /* PostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165813352BDACC880026DA9D /* PostDetailView.swift */; };
 		165813382BDB5FB00026DA9D /* DataExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165813372BDB5FAF0026DA9D /* DataExample.swift */; };
@@ -114,6 +116,8 @@
 		164AA8382BE2089C004B54FE /* EventManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventManager.swift; sourceTree = "<group>"; };
 		164AA83A2BE2B4A3004B54FE /* EventDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailView.swift; sourceTree = "<group>"; };
 		164AA83C2BE35866004B54FE /* AddEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEventView.swift; sourceTree = "<group>"; };
+		164ACD372E4B39230080499F /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		164ACD3B2E4B43BC0080499F /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		1658132F2BDA79500026DA9D /* PostManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostManager.swift; sourceTree = "<group>"; };
 		165813352BDACC880026DA9D /* PostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailView.swift; sourceTree = "<group>"; };
 		165813372BDB5FAF0026DA9D /* DataExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExample.swift; sourceTree = "<group>"; };
@@ -372,6 +376,7 @@
 		16BABEFA2BC7B04B0048C05C = {
 			isa = PBXGroup;
 			children = (
+				164ACD3B2E4B43BC0080499F /* Config.xcconfig */,
 				16BABF052BC7B04B0048C05C /* Roam */,
 				16BABF042BC7B04B0048C05C /* Products */,
 			);
@@ -388,6 +393,7 @@
 		16BABF052BC7B04B0048C05C /* Roam */ = {
 			isa = PBXGroup;
 			children = (
+				164ACD372E4B39230080499F /* .gitignore */,
 				16BABF062BC7B04B0048C05C /* RoamApp.swift */,
 				16BABF082BC7B04B0048C05C /* ContentView.swift */,
 				165C610C2BDA3D2800515A40 /* View */,
@@ -510,6 +516,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				164ACD382E4B39280080499F /* .gitignore in Resources */,
+				164ACD3C2E4B43BC0080499F /* Config.xcconfig in Resources */,
 				16BABF0E2BC7B04D0048C05C /* Preview Assets.xcassets in Resources */,
 				16852CCD2BFE517C00C4B042 /* GoogleService-Info.plist in Resources */,
 				16BABF0B2BC7B04D0048C05C /* Assets.xcassets in Resources */,
@@ -643,8 +651,9 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				"OTHER_SWIFT_FLAGS[arch=*]" = "-DYELP_API_KEY=\\\"$(YELP_API_KEY)\\\"";
 				SDKROOT = iphoneos;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited) -DYELP_API_KEY=\\\"$(YELP_API_KEY)\\\"";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -699,7 +708,9 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				"OTHER_SWIFT_FLAGS[arch=*]" = "-DYELP_API_KEY=\\\"$(YELP_API_KEY)\\\"";
 				SDKROOT = iphoneos;
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS[arch=*]" = "-DYELP_API_KEY=\\\"$(YELP_API_KEY)\\\"";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};

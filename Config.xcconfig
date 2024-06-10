@@ -1,0 +1,11 @@
+//
+//  Config.xcconfig
+//  Roam
+//
+//  Created by Jeremy Teng  on 12/08/2025.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+
+YELP_API_KEY = rdgyPRJcyqMJinNN8UPBa3Yam7wBz5MQzUSvWH0k5k-zegy5uHEj0NDe_XRl0expZwAVsQYrkCD-bN69nsjzCyp4brExwKjCOhhBvh4ofKTE8rmswYfzgFDsoCz3ZXYx

@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 
+
 @MainActor
 class YelpFetcher: ObservableObject {
     let QUERY_LIMIT = 20
@@ -22,7 +23,13 @@ class YelpFetcher: ObservableObject {
     
     let service = APISerivce()
     
-    private let apiKey = "rdgyPRJcyqMJinNN8UPBa3Yam7wBz5MQzUSvWH0k5k-zegy5uHEj0NDe_XRl0expZwAVsQYrkCD-bN69nsjzCyp4brExwKjCOhhBvh4ofKTE8rmswYfzgFDsoCz3ZXYx"
+    private let apiKey: String = {
+        if let key = ProcessInfo.processInfo.environment["YELP_API_KEY"] {
+            return key
+        } else {
+            fatalError("YELP_API_KEY environment variable not set")
+        }
+    }()
     private var searchURLComponents = URLComponents()
     
     init(){

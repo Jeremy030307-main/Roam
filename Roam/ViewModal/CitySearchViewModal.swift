@@ -56,16 +56,21 @@ class CitySearchViewModal: NSObject,ObservableObject {
 extension CitySearchViewModal: MKLocalSearchCompleterDelegate {
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         let result = self.getCityList(results: completer.results)
-        if result.isEmpty{
-            self.status = .noResults
-        } else {
-            self.searchResults = result
-            self.status = .result
+        
+        DispatchQueue.main.async {
+            if result.isEmpty {
+                self.status = .noResults
+            } else {
+                self.searchResults = result
+                self.status = .result
+            }
         }
     }
 
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        self.status = .error(error.localizedDescription)
+        DispatchQueue.main.async {
+            self.status = .error(error.localizedDescription)
+        }
     }
     
     func getCityList(results: [MKLocalSearchCompletion]) -> [(city: String, country: String)]{

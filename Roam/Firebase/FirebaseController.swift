@@ -61,7 +61,6 @@ class FirebaseController: ObservableObject{
         }
         return false
     }
-
 }
 
 // update functionality of fetching data from Firebase
@@ -88,27 +87,35 @@ extension FirebaseController{
                 print("User document was empty \(String(describing: error))")
                 return
             }
-            print("userFetcher")
-            self.user = User()
-            self.post = []
-            self.guide = []
-            self.user.id = userSnapshot.documentID
-            self.user.name = userData["name"] as? String
-            self.user.username = userData["name"] as? String
-            self.user.email = userData["email"] as? String
             
-            if let tripReferences = userData["trips"] as? [DocumentReference] {
+            print(userSnapshot)
+            print(userData)
+            
+            DispatchQueue.main.async {
+                self.user = User()
+                self.post = []
+                self.guide = []
+                self.user.id = userSnapshot.documentID
+                self.user.name = userData["name"] as? String
+                self.user.username = userData["name"] as? String
+                self.user.email = userData["email"] as? String
+                
+                print(self.user)
+                
+                // convert the array of data to a list of documentReference that link to a specific file of firebase
+                if let tripReferences = userData["trips"] as? [DocumentReference] {
 
-                let tripIDs = tripReferences.map({$0.documentID})
-                if !tripIDs.isEmpty{
-                    self.fetchTrip(tripIDs: tripIDs)
+                    let tripIDs = tripReferences.map({$0.documentID})
+                    if !tripIDs.isEmpty{
+                        self.fetchTrip(tripIDs: tripIDs)
+                    }
                 }
+                
+                self.fetchUserPost()
+                self.fetchUserGuide()
+                self.fetchFeed()
+
             }
-            
-            self.fetchUserPost()
-            self.fetchUserGuide()
-            self.fetchFeed()
-            
         }
     }
     
@@ -119,6 +126,7 @@ extension FirebaseController{
      */
     private func fetchTrip(tripIDs: [String]){
         
+        // fetch all the trip in the firebase that have the id within the provided string
         self.db.collection("Trip").whereField("id", in: tripIDs).addSnapshotListener { querySnapshot, error in
             
             guard let snapshot = querySnapshot else {
@@ -133,25 +141,32 @@ extension FirebaseController{
                 } catch {
                     fatalError("Unable to decode trip: \(error)")
                 }
+                
                 if (change.type == .added) && (!self.user.trips.contains(trip)){
-                    self.user.trips.insert(trip, at: Int(change.newIndex))
-                    self.fetchEventPerDay(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex))
-                    self.fetchSavedPlace(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex))
-                    self.fetchExpensePerDay(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex))
-                    self.fetchChecklistCategory(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex))
+                    DispatchQueue.main.async {
+                        self.user.trips.insert(trip, at: Int(change.newIndex))
+                    }
+                    self.fetchEventPerDay(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex), docRef: change.document.reference)
+                    self.fetchSavedPlace(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex), docRef: change.document.reference)
+                    self.fetchExpensePerDay(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex), docRef: change.document.reference)
+                    self.fetchChecklistCategory(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex), docRef: change.document.reference)
                     
                 }
                 if (change.type == .modified) {
-                    self.user.trips.remove(at: Int(change.oldIndex))
-                    self.user.trips.insert(trip, at: Int(change.newIndex))
-                    self.fetchEventPerDay(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex))
-                    self.fetchSavedPlace(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex))
-                    self.fetchExpensePerDay(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex))
-                    self.fetchChecklistCategory(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex))
+                    DispatchQueue.main.async {
+                        self.user.trips.remove(at: Int(change.oldIndex))
+                        self.user.trips.insert(trip, at: Int(change.newIndex))
+                    }
+                    self.fetchEventPerDay(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex), docRef: change.document.reference)
+                    self.fetchSavedPlace(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex), docRef: change.document.reference)
+                    self.fetchExpensePerDay(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex), docRef: change.document.reference)
+                    self.fetchChecklistCategory(tripID: trip.id.uuidString, tripIndex: Int(change.newIndex), docRef: change.document.reference)
 
                 }
                 if (change.type == .removed) {
-                    self.user.trips.removeAll(where: {$0.id == trip.id})
+                    DispatchQueue.main.async {
+                        self.user.trips.removeAll(where: {$0.id == trip.id})
+                    }
                 }
             }
         }
@@ -163,14 +178,16 @@ extension FirebaseController{
         - tripID: id of trip to add into
         - tripIndex: index of the trip in the user document
      */
-    private func fetchEventPerDay(tripID: String, tripIndex: Int){
-        let docRef = db.collection("Trip").document(tripID)
+    private func fetchEventPerDay(tripID: String, tripIndex: Int, docRef: DocumentReference){
 
+        // fetch all the document in the subcollection "events" within a trip document
         docRef.collection("events").order(by: "day").addSnapshotListener { querySnapshot, error in
+            
             guard let snapshot = querySnapshot else {
                 print("Error fetching snapshots: \(error!)")
                 return
             }
+            
             snapshot.documentChanges.forEach { change in
                 
                 let eventPerDayData = change.document.data()
@@ -178,7 +195,6 @@ extension FirebaseController{
                 do {
                     eventPerDay = try change.document.data(as: EventPerDay.self)
                 } catch {
-                    print(change.document.documentID)
                     fatalError("Unable to decode Event Per Day: \(error.localizedDescription)")
                 }
                 
@@ -188,7 +204,9 @@ extension FirebaseController{
                 }
                                 
                 if (change.type == .modified) && validIndex {
-                    self.user.trips[tripIndex].events.remove(at: Int(change.oldIndex))
+                    DispatchQueue.main.async {
+                        self.user.trips[tripIndex].events.remove(at: Int(change.oldIndex))
+                    }
                 }
                 
                 var eventExist = false
@@ -199,8 +217,11 @@ extension FirebaseController{
                 }
                 
                 if ((change.type == .added) || (change.type == .modified)) && !eventExist && validIndex{
-                    self.user.trips[tripIndex].events.insert(eventPerDay, at: Int(change.newIndex))
+                    DispatchQueue.main.async {
+                        self.user.trips[tripIndex].events.insert(eventPerDay, at: Int(change.newIndex))
+                    }
                     
+                    // convert that array od data fetched into a list of documentReference, then convert each of them to respective documentID
                     if let eventReference = eventPerDayData["events"] as? [DocumentReference] {
                         
                         let eventIDs = eventReference.map({$0.documentID})
@@ -286,8 +307,7 @@ extension FirebaseController{
         - tripID: id of trip to add into
         - tripIndex: index of the trip in the user document
      */
-    private func fetchExpensePerDay(tripID: String, tripIndex: Int){
-        let docRef = db.collection("Trip").document(tripID)
+    private func fetchExpensePerDay(tripID: String, tripIndex: Int, docRef: DocumentReference){
 
         docRef.collection("expenses").order(by: "day").addSnapshotListener { querySnapshot, error in
             guard let snapshot = querySnapshot else {
@@ -386,8 +406,7 @@ extension FirebaseController{
         - tripID: id of trip to add into
         - tripIndex: index of the trip in the user document
      */
-    private func fetchChecklistCategory(tripID: String, tripIndex: Int){
-        let docRef = db.collection("Trip").document(tripID)
+    private func fetchChecklistCategory(tripID: String, tripIndex: Int, docRef: DocumentReference){
 
         docRef.collection("checklists").order(by: "dateCreated").addSnapshotListener { querySnapshot, error in
             guard let snapshot = querySnapshot else {
@@ -482,10 +501,8 @@ extension FirebaseController{
         - tripID: id of trip to add into
         - tripIndex: index of the trip in the user document
      */
-    private func fetchSavedPlace(tripID: String, tripIndex: Int){
+    private func fetchSavedPlace(tripID: String, tripIndex: Int, docRef: DocumentReference){
         
-        let docRef = db.collection("Trip").document(tripID)
-
         docRef.collection("savedPlaces").addSnapshotListener { querySnapshot, error in
             guard let snapshot = querySnapshot else {
                 print("Error fetching snapshots: \(error!)")
@@ -608,6 +625,7 @@ extension FirebaseController{
         - postIndex: index of the post in the list
         - belongToUser: is this guide belong to the current user, ot belong to the feed
      */
+    @MainActor
     private func fetchUserGuideTrip(docRef: DocumentReference, postIndex: Int, belongToUser: Bool) async{
         
         do {

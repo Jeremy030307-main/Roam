@@ -100,117 +100,138 @@ struct AddEventView: View {
 }
 
 struct AddEventForm: View {
-    
     @ObservedObject var tripManager: TripManager
-    
+    @State private var activeLocationType: AddEventLocationSearch.LocationType? = nil
     var animation: Namespace.ID
     var defaultLocation: Location?
-    
+
     var body: some View {
-            Section{
-                Text(tripManager.trip.title ?? "").foregroundStyle(.secondary)
+        VStack(alignment: .leading) {
+            Section {
+                Text(tripManager.trip.title ?? "")
+                    .foregroundStyle(.secondary)
             } header: {
-                VStack(alignment:.leading){
-                    HStack{
+                VStack(alignment: .leading) {
+                    HStack {
                         TripCirceleIcon(image: Image(systemName: tripManager.newEventType.icon), color: Color.accentColor, dimension: 40)
                             .frame(width: 40)
                             .matchedGeometryEffect(id: tripManager.newEventType.icon, in: animation)
-                        
-                        Text(tripManager.newEventType.name).padding(.horizontal, 10).font(.title3).bold().textCase(nil).foregroundStyle(.black)
+    
+                        Text(tripManager.newEventType.name)
+                            .padding(.horizontal, 10)
+                            .font(.title3)
+                            .bold()
+                            .textCase(nil)
+                            .foregroundStyle(.black)
                             .matchedGeometryEffect(id: tripManager.newEventType.name, in: animation)
-                    }.padding(.bottom, 15)
+                    }
+                    .padding(.bottom, 15)
                     Text("Trip")
                 }
             }
             .headerProminence(.standard)
-                        
-        switch tripManager.newEventType {
-        case .activity:
-            AddEventDuration(tripManager: tripManager, startTimePrompt: "Start", endTimePrompt: "End")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Location", prompt: "e.g., Library, Musuem", defaultLocation: defaultLocation)
-        case .flight:
-            AddEventDuration(tripManager: tripManager, startTimePrompt: "Depature", endTimePrompt: "Arrival")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Depature Location", prompt: "e.g., Train Station, Bus Station")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .arrival, sectionName: "Arrival Location", prompt: "e.g., Train Station, Bus Station")
-        case .accomodation:
-            AddEventDuration(tripManager: tripManager, startTimePrompt: "Check In", endTimePrompt: "Check Out")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Accomodation Name", prompt: "e.g., Hyatt, Shangri-La", defaultLocation: defaultLocation)
-        case .restaurant:
-            AddEventDuration(tripManager: tripManager, startTimePrompt: "Start", endTimePrompt: "End")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Restaurant Name", prompt: "e.g., Italian, Starbucks", defaultLocation: defaultLocation)
-        case .tour:
-            AddEventDuration(tripManager: tripManager, startTimePrompt: "Start", endTimePrompt: "End")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Location", prompt: "e.g., Mountain, Train Station", defaultLocation: defaultLocation)
-        case .transportation:
-            AddEventDuration(tripManager: tripManager, startTimePrompt: "Depature", endTimePrompt: "Arrival")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Depature Location", prompt: "e.g., Train Station, Bus Station")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .arrival, sectionName: "Arrival Location", prompt: "e.g., Train Station, Bus Station")
-        case .carRental:
-            AddEventDuration(tripManager: tripManager, startTimePrompt: "Pick Up", endTimePrompt: "Drop Off")
-            AddEventLocationSearch(tripManager: tripManager, locationType: .location, sectionName: "Pick Up Location", prompt: "e.g., Train Station, Bus Station")
 
-            AddEventLocationSearch(tripManager: tripManager, locationType: .arrival, sectionName: "Drop Off Location", prompt: "e.g., Train Station, Bus Station")
+            // Conditional input views
+            Group {
+                switch tripManager.newEventType {
+                case .activity:
+                    AddEventDuration(tripManager: tripManager, startTimePrompt: "Start", endTimePrompt: "End")
+                    AddLocationSection("Location", prompt: "e.g., Library", bindTo: $tripManager.newEventLocation)
+
+                case .flight:
+                    AddEventDuration(tripManager: tripManager, startTimePrompt: "Departure", endTimePrompt: "Arrival")
+                    AddLocationSection("Departure Location", prompt: "e.g., Airport", bindTo: $tripManager.newEventLocation)
+                    AddLocationSection("Arrival Location", prompt: "e.g., Airport", bindTo: $tripManager.newEventDestination)
+
+                case .accomodation:
+                    AddEventDuration(tripManager: tripManager, startTimePrompt: "Check In", endTimePrompt: "Check Out")
+                    AddLocationSection("Accomodation Name", prompt: "e.g., Hotel", bindTo: $tripManager.newEventLocation)
+
+                case .restaurant:
+                    AddEventDuration(tripManager: tripManager, startTimePrompt: "Start", endTimePrompt: "End")
+                    AddLocationSection("Restaurant Name", prompt: "e.g., Italian", bindTo: $tripManager.newEventLocation)
+
+                case .tour:
+                    AddEventDuration(tripManager: tripManager, startTimePrompt: "Start", endTimePrompt: "End")
+                    AddLocationSection("Location", prompt: "e.g., Mountain", bindTo: $tripManager.newEventLocation)
+
+                case .transportation:
+                    AddEventDuration(tripManager: tripManager, startTimePrompt: "Departure", endTimePrompt: "Arrival")
+                    AddLocationSection("Departure Location", prompt: "e.g., Station", bindTo: $tripManager.newEventLocation)
+                    AddLocationSection("Arrival Location", prompt: "e.g., Station", bindTo: $tripManager.newEventDestination)
+
+                case .carRental:
+                    AddEventDuration(tripManager: tripManager, startTimePrompt: "Pick Up", endTimePrompt: "Drop Off")
+                    AddLocationSection("Pick Up Location", prompt: "e.g., Car Center", bindTo: $tripManager.newEventLocation)
+                    AddLocationSection("Drop Off Location", prompt: "e.g., Car Center", bindTo: $tripManager.newEventDestination)
+                }
+            }
+        }
+        .sheet(item: $activeLocationType) { type in
+            switch type {
+            case .location:
+                SearchLocationSheet(tripManager: tripManager, location: $tripManager.newEventLocation, prompt: "...")
+            case .arrival:
+                SearchLocationSheet(tripManager: tripManager, location: $tripManager.newEventDestination, prompt: "...")
+            }
+        }
+    }
+
+    @ViewBuilder
+    func AddLocationSection(_ name: String, prompt: String, bindTo: Binding<LocationData?>) -> some View {
+        AddEventLocationSearch(
+            locationType: .location,
+            sectionName: name,
+            prompt: prompt,
+            defaultLocation: defaultLocation,
+            selectedLocation: bindTo.wrappedValue
+        ) {
+            activeLocationType = .location
         }
     }
 }
 
 struct AddEventLocationSearch: View {
-        
     enum LocationType {
         case location, arrival
     }
-    
-    @ObservedObject var tripManager: TripManager
 
-    @State var searchLocation = false
     var locationType: LocationType
     var sectionName: String
     var prompt: String
     var defaultLocation: Location?
     
-    var body: some View{
-        
-        Section{
-            if let location = defaultLocation{
-                VStack{
-                    Text(location.name ?? "")
-                }
+    var selectedLocation: LocationData?
+    var onTap: () -> Void
+    
+    var body: some View {
+        Section {
+            if let location = defaultLocation {
+                Text(location.name ?? "")
             } else {
-                VStack{
-                    if locationType == .location{
-                        Text(tripManager.newEventLocation?.name==nil ? "Tap to Search":tripManager.newEventLocation?.name ?? "").foregroundStyle(tripManager.newEventLocation?.name==nil ? .tertiary: .primary)
-                    } else {
-                        Text(tripManager.newEventDestination?.name==nil ? "Tap to Search":tripManager.newEventDestination?.name ?? "").foregroundStyle(tripManager.newEventDestination?.name==nil ? .tertiary: .primary)
+                Text(selectedLocation?.name ?? "Tap to Search")
+                    .foregroundStyle(selectedLocation?.name == nil ? .tertiary : .primary)
+                    .onTapGesture {
+                        onTap()
                     }
-                }
-                .onTapGesture {
-                    withAnimation(.easeInOut) {
-                        searchLocation.toggle()
-                    }
-                }
             }
-
         } header: {
             Text(sectionName)
         } footer: {
-            if let location = defaultLocation{
+            if let location = defaultLocation {
                 Text(location.address ?? "")
             } else {
-                if locationType == .location{
-                    Text(tripManager.newEventLocation?.address ?? "")
-                } else {
-                    Text(tripManager.newEventDestination?.address ?? "")
-                }
+                Text(selectedLocation?.address ?? "")
             }
         }
-        
-        .sheet(isPresented: $searchLocation){
-            switch locationType {
-            case .location:
-                SearchLocationSheet(tripManager: tripManager, location: $tripManager.newEventLocation, prompt: prompt)
-            case .arrival:
-                SearchLocationSheet(tripManager: tripManager, location: $tripManager.newEventDestination, prompt: prompt)
-            }
+    }
+}
+
+extension AddEventLocationSearch.LocationType: Identifiable {
+    var id: String {#imageLiteral(resourceName: "simulator_screenshot_167F9342-803A-4CE2-90BA-00543F1346C2.png")
+        switch self {
+        case .location: return "location"
+        case .arrival: return "arrival"
         }
     }
 }

@@ -65,14 +65,23 @@ struct AddNewTripView: View {
                         Text("Trip Name").foregroundStyle(.accent)
                     }
                     
-                    Section{
-                        TextField("e.g., Paris, Melbourne", text: $destination)
-                            .onTapGesture {
-                                withAnimation(.easeInOut) {
-                                    enterDestination.toggle()
-                                }
+                    Section {
+                        Button {
+                            withAnimation(.easeInOut) {
+                                enterDestination.toggle()
+                                print("Tapped! enterDestination is now: \(enterDestination)")
                             }
-                            .matchedGeometryEffect(id: "destinationSearch", in: destinationSearchAnimation)
+                        } label: {
+                            HStack {
+                                Text(destination.isEmpty ? "e.g., Paris, Melbourne" : destination)
+                                    .foregroundColor(destination.isEmpty ? .gray : .primary)
+                                Spacer()
+                            }
+                            .padding(10)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }
+                        .matchedGeometryEffect(id: "destinationSearch", in: destinationSearchAnimation)
                     } header: {
                         Text("Destination").foregroundStyle(.accent)
                     }
